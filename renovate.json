@@ -1,0 +1,36 @@
+{
+  "extends": [
+    "config:base",
+    ":gitSignOff",
+    ":disableDependencyDashboard"
+  ],
+  "labels": [
+    "dependency"
+  ],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
+  "packageRules": [
+    {
+      "matchPackagePatterns": [
+        "golang.org/x/*"
+      ],
+      "groupName": "golang.org/x",
+      "schedule": [
+        "on the first day of the month"
+      ],
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": [
+        "k8s.io/utils",
+        "sigs.k8s.io/controller-runtime/tools/setup-envtest"
+      ],
+      "groupName": "k8s.io/utils",
+      "schedule": [
+        "on the first day of the month"
+      ],
+      "automerge": true
+    }
+  ]
+}
