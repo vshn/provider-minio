@@ -1,0 +1,7 @@
+# Goreleaser
+dist/
+.github/release-notes.md
+
+# Build
+# TODO: Adjust binary file name
+go-bootstrap
