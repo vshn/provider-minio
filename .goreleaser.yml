@@ -5,8 +5,11 @@ builds:
   - CGO_ENABLED=0 # this is needed otherwise the Docker image build is faulty
   goarch:
   - amd64
+  - arm64
   goos:
   - linux
+  goarm:
+  - 8
 
 archives:
 - format: binary
@@ -19,13 +22,36 @@ snapshot:
   name_template: "{{ incpatch .Version }}-snapshot"
 
 dockers:
-- image_templates:
   # TODO: Adjust image locations
-  - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}"
+- goarch: amd64
+  use: buildx
+  build_flag_templates:
+  - "--platform=linux/amd64"
+  image_templates:
+  - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-amd64"
 
-    # For prereleases, updating `latest` does not make sense.
-    # Only the image for the exact version should be pushed.
-  - "{{ if not .Prerelease }}ghcr.io/vshn/go-bootstrap:latest{{ end }}"
+- goarch: arm64
+  use: buildx
+  build_flag_templates:
+    - "--platform=linux/arm64/v8"
+  image_templates:
+  - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-arm64"
+
+docker_manifests:
+  # TODO: Adjust image locations
+
+  ## ghcr.io
+  # For prereleases, updating `latest` does not make sense.
+  # Only the image for the exact version should be pushed.
+  - name_template: "{{ if not .Prerelease }}ghcr.io/vshn/go-bootstrap:latest{{ end }}"
+    image_templates:
+      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-amd64"
+      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-arm64"
+
+  - name_template: "ghcr.io/vshn/go-bootstrap:v{{ .Version }}"
+    image_templates:
+      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-amd64"
+      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-arm64"
 
 release:
   prerelease: auto
