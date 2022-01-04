@@ -5,3 +5,4 @@ dist/
 # Build
 # TODO: Adjust binary file name
 go-bootstrap
+*.out
