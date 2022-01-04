@@ -1,0 +1,19 @@
+site:
+  # TODO: Adjust project meta
+  title: Go Bootstrap
+  start_page: go-bootstrap::index.adoc
+  url: https://vshn.github.io/go-bootstrap
+content:
+  sources:
+    - url: ../antora
+      branches:
+        - HEAD
+        - docs/v*
+      start_path: docs
+ui:
+  bundle:
+    url: https://github.com/vshn/antora-ui-default/releases/download/2.0.15/ui-bundle.zip
+    snapshot: true
+output:
+  dir: .public/
+  clean: true

@@ -8,7 +8,12 @@ MAKEFLAGS += --no-builtin-variables
 .SECONDARY:
 .DEFAULT_GOAL := help
 
+# General variables
 include Makefile.vars.mk
+
+# Documentation module
+include docs/Makefile
+docs_make := $(MAKE) -C docs
 
 .PHONY: help
 help: ## Show this help
@@ -24,7 +29,7 @@ build-bin: fmt vet ## Build binary
 
 .PHONY: build-docker
 build-docker: build-bin ## Build docker image
-	docker build -t $(CONTAINER_IMG) .
+	$(DOCKER_CMD) build -t $(CONTAINER_IMG) .
 
 .PHONY: test
 test: test-go ## All-in-one test
