@@ -28,14 +28,14 @@ dockers:
   build_flag_templates:
   - "--platform=linux/amd64"
   image_templates:
-  - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-amd64"
+  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
 
 - goarch: arm64
   use: buildx
   build_flag_templates:
     - "--platform=linux/arm64/v8"
   image_templates:
-  - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-arm64"
+  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
 
 docker_manifests:
   # TODO: Adjust image locations
@@ -43,15 +43,15 @@ docker_manifests:
   ## ghcr.io
   # For prereleases, updating `latest` does not make sense.
   # Only the image for the exact version should be pushed.
-  - name_template: "{{ if not .Prerelease }}ghcr.io/vshn/go-bootstrap:latest{{ end }}"
+  - name_template: "{{ if not .Prerelease }}{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:latest{{ end }}"
     image_templates:
-      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-amd64"
-      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-arm64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
 
-  - name_template: "ghcr.io/vshn/go-bootstrap:v{{ .Version }}"
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
     image_templates:
-      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-amd64"
-      - "ghcr.io/vshn/go-bootstrap:v{{ .Version }}-arm64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
 
 release:
   prerelease: auto
