@@ -45,3 +45,6 @@ vet: ## Run 'go vet' against code
 lint: fmt vet generate ## All-in-one linting
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
+
+.PHONY: generate
+generate: ## Generate additional code and artifacts
