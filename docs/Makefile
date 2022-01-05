@@ -20,7 +20,10 @@ docs-preview: ## Preview the documentation
 docs-html: $(docs_out_dir)/index.html ## Generate HTML version of documentation with Antora, output at ./.public
 	@touch $(docs_out_dir)/.nojekyll
 
-$(out_dir)/index.html:
+.PHONY: docs-publish
+docs-publish: node_modles docs-html ## Publishes the Antora documentation on Github Pages
+	npm run deploy
+
 $(docs_out_dir)/index.html:
 	$(antora_cmd) $(antora_opts) docs/antora-playbook.yml
 

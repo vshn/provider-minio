@@ -11,9 +11,8 @@ MAKEFLAGS += --no-builtin-variables
 # General variables
 include Makefile.vars.mk
 
-# Documentation module
+# Optional documentation module. Remove this line if you don't need Antora documentation.
 include docs/Makefile
-docs_make := $(MAKE) -C docs
 
 .PHONY: help
 help: ## Show this help
@@ -54,3 +53,7 @@ lint: fmt vet generate ## All-in-one linting
 .PHONY: generate
 generate: ## Generate additional code and artifacts
 	@go generate ./...
+
+.PHONY: clean
+clean: ## Cleans local build artifacts
+	rm -rf node_modules $(docs_out_dir) dist .cache

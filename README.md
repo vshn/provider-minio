@@ -63,7 +63,7 @@ By default, it is automatically published to GitHub Pages in `gh-pages` branch, 
 1. Prepare `gh-pages` branch (commit current changes first!)
 ```
 initial_commit=$(git rev-list --max-parents=0 HEAD)
-git switch --orphan gh-pages $initial_commit
+git switch --track --create gh-pages $initial_commit
 #rm -rf *
 ```
 
