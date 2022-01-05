@@ -1,0 +1,41 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Determine Go version from go.mod
+        run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload code coverage report to Code Climate
+        uses: paambaati/codeclimate-action@v3.0.0
+        env:
+          # TODO: Update Reporter ID after importing in codeclimate.com
+          CC_TEST_REPORTER_ID: 8297d060a2a57278046db1ec5bb0e831a5e1c4e3624ad3991492157b60fc8433
+        with:
+          coverageLocations: cover.out:gocov
+          prefix: github.com/${{ github.repository }}
