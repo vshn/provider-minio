@@ -11,8 +11,8 @@ MAKEFLAGS += --no-builtin-variables
 # General variables
 include Makefile.vars.mk
 
-# Optional documentation module. Remove this line if you don't need Antora documentation.
-include docs/Makefile
+# Documentation module. If files not found, no warning/error is printed
+-include docs/antora-preview.mk docs/antora-build.mk
 
 .PHONY: help
 help: ## Show this help

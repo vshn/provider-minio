@@ -77,16 +77,11 @@ git switch -f $current_branch
 And you're done!
 GitHub automatically recognizes and sets up Pages if there's a `gh-pages` branch.
 
-### Skip publishing to GitHub Pages
+---
 
 If you want to skip deployment to GitHub Pages you need to delete specific files and references:
+`rm -f .github/workflows/docs.yml docs/package*.json docs/antora-playbook.yml docs/antora-build.mk`
 
-1. `rm -f .github/workflows/docs.yml docs/package*.json docs/antora-playbook.yml`
-1. Remove the `docs-publish` and `node_modules` targets in `docs/Makefile`
+---
 
-### Remove documentation
-
-If you want to remove documentation completely follow these steps:
-
-1. `rm -rf docs .github/workflows/docs.yml`
-1. Remove line `include docs/Makefile` in `Makefile`
+If you want to remove documentation completely simply run `rm -rf docs .github/workflows/docs.yml`
