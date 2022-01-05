@@ -36,6 +36,8 @@ TIP: You can search for these tasks using `grep -n -r "TODO:" .`
 1. `.github/workflows/test.yml`: Update CodeClimate reporter ID (to be found in codeclimate.com Test coverage settings)
 1. `docs/antora.yml`: Adjust project meta.
 1. `docs/antora-playbook.yml`: Adjust project meta.
+1. `docs/modules/pages/index.adoc`: Edit start page.
+1. `docs/modules/nav.adoc`: Edit navigation.
 After completing a task, you can remove the comment in the files.
 
 ## Other repository settings
@@ -55,22 +57,36 @@ After completing a task, you can remove the comment in the files.
 
 ## Antora documentation
 
-This template comes with an Antora documentation module to help you create sophisticated Asciidoctor documentation.
+This template comes with an Antora documentation module to help you create Asciidoctor documentation.
 By default, it is automatically published to GitHub Pages in `gh-pages` branch, however it can also be included in external Antora playbooks.
 
 ### Setup GitHub Pages
 
-1. Prepare `gh-pages` branch (commit current changes first!)
-```
+Let's prepare and empty `gh-pages` branch, but make sure to **commit or stash current changes first!**
+
+```bash
+current_branch=$(git rev-parse --abbrev-ref HEAD)
 initial_commit=$(git rev-list --max-parents=0 HEAD)
-git switch --track --create gh-pages $initial_commit
-#rm -rf *
+git switch --create gh-pages $initial_commit
+git rm -r --cached .
+git commit -m "Prepare gh-pages branch"
+git push --set-upstream origin gh-pages
+git switch -f $current_branch
 ```
 
-If you want to skip publish to GitHub Pages, simply remove `.github/workflows/docs.yml`.
+And you're done!
+GitHub automatically recognizes and sets up Pages if there's a `gh-pages` branch.
+
+### Skip publishing to GitHub Pages
+
+If you want to skip deployment to GitHub Pages you need to delete specific files and references:
+
+1. `rm -f .github/workflows/docs.yml docs/package*.json docs/antora-playbook.yml`
+1. Remove the `docs-publish` and `node_modules` targets in `docs/Makefile`
+
+### Remove documentation
 
 If you want to remove documentation completely follow these steps:
 
-1. Remove `docs`
-1. Remove `.github/workflows/docs.yml`
+1. `rm -rf docs .github/workflows/docs.yml`
 1. Remove line `include docs/Makefile` in `Makefile`

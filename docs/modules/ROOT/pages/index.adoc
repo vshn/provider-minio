@@ -1,3 +1,5 @@
+// TODO: Edit start page
+
 = {page-component-name}
 
 [discrete]
