@@ -2,19 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/go-logr/zapr"
 	"github.com/urfave/cli/v2"
-	"github.com/vshn/go-bootstrap/cfg"
-	"github.com/vshn/go-bootstrap/cmd"
-	"github.com/vshn/go-bootstrap/cmd/example"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -26,35 +20,18 @@ var (
 	// TODO: Adjust app name
 	appName     = "go-bootstrap"
 	appLongName = "a generic bootstrapping project"
+
+	// TODO: Adjust or clear env var prefix
+	// envPrefix is the global prefix to use for the keys in environment variables
+	envPrefix = "BOOTSTRAP"
 )
 
 func main() {
-	err := app().Run(os.Args)
-	if err != nil {
-		log.Fatalf("unable to start %s: %v", appName, err)
-	}
+	app := newApp()
+	_ = app.Run(os.Args)
 }
 
-func before(c *cli.Context) error {
-	logger := newLogger(appName, c.Bool("debug"))
-	cmd.SetAppLogger(c, logger)
-	if c.Args().Present() {
-		logger.WithValues(
-			"version", version,
-			"date", date,
-			"commit", commit,
-			"go_os", runtime.GOOS,
-			"go_arch", runtime.GOARCH,
-			"go_version", runtime.Version(),
-			"uid", os.Getuid(),
-			"gid", os.Getgid(),
-		).Info("Starting up " + appName)
-	}
-
-	return nil
-}
-
-func app() *cli.App {
+func newApp() *cli.App {
 	cli.VersionPrinter = func(_ *cli.Context) {
 		fmt.Printf("version=%s revision=%s date=%s\n", version, commit, date)
 	}
@@ -64,7 +41,7 @@ func app() *cli.App {
 		compiled = time.Time{}
 	}
 
-	return &cli.App{
+	app := &cli.App{
 		Name:     appName,
 		Usage:    appLongName,
 		Version:  version,
@@ -78,25 +55,74 @@ func app() *cli.App {
 				Name:    "debug",
 				Aliases: []string{"verbose", "d"},
 				Usage:   "sets the log level to debug",
-				EnvVars: []string{cfg.Env("DEBUG")},
+				EnvVars: envVars("DEBUG"),
+			},
+			&cli.StringFlag{
+				Name:        "log-format",
+				Usage:       "sets the log format (values: [json, console])",
+				EnvVars:     envVars("LOG_FORMAT"),
+				DefaultText: "console",
 			},
 		},
 		Commands: []*cli.Command{
-			example.Command,
+			newExampleCommand(),
+		},
+		ExitErrHandler: func(context *cli.Context, err error) {
+			if err != nil {
+				AppLogger(context).Error(err, "fatal error")
+				cli.HandleExitCoder(cli.Exit("", 1))
+			}
 		},
 	}
+	hasSubcommands := len(app.Commands) > 0
+	app.Action = func(context *cli.Context) error {
+		if hasSubcommands {
+			return cli.ShowAppHelp(context)
+		}
+		logMetadata(AppLogger(context))
+		return nil
+	}
+	return app
 }
 
-func newLogger(name string, debug bool) logr.Logger {
-	zc := zap.NewDevelopmentConfig()
-	if debug {
-		// Zap's levels get more verbose as the number gets smaller,
-		// bug logr's level increases with greater numbers.
-		zc.Level = zap.NewAtomicLevelAt(zapcore.Level(-2)) // max logger.V(2)
+func before(c *cli.Context) error {
+	useProductionConfig := strings.EqualFold("JSON", c.String("log-format"))
+	logger := newLogger(appName, c.Bool("debug"), useProductionConfig)
+	SetAppLogger(c, logger)
+	if !c.Args().Present() {
+		// skip printing metadata if displaying the usage
+		return nil
 	}
-	z, err := zc.Build(zap.WithCaller(false))
-	if err != nil {
-		log.Fatalf("error configuring the logging stack")
+	log := logger.WithValues()
+	if !useProductionConfig {
+		log = log.WithValues("version", version)
 	}
-	return zapr.NewLogger(z).WithName(name)
+	logMetadata(logger)
+	return nil
+}
+
+func logMetadata(log logr.Logger) {
+	log.WithValues(
+		"date", date,
+		"commit", commit,
+		"go_os", runtime.GOOS,
+		"go_arch", runtime.GOARCH,
+		"go_version", runtime.Version(),
+		"uid", os.Getuid(),
+		"gid", os.Getgid(),
+	).Info("Starting up " + appName)
+}
+
+// env combines envPrefix with given suffix delimited by underscore.
+func env(suffix string) string {
+	return envPrefix + "_" + suffix
+}
+
+// envVars combines envPrefix with each given suffix delimited by underscore.
+func envVars(suffixes ...string) []string {
+	arr := make([]string, len(suffixes))
+	for i := range suffixes {
+		arr[i] = env(suffixes[i])
+	}
+	return arr
 }

@@ -32,6 +32,7 @@ Template repository for common Go setups
 
 * CLI and logging framework
   - To help get you started with CLI subcommands, flags and environment variables
+  - If you don't need subcommands, remove `example_command.go` and adjust `cli.App` settings in `main.go`
 
 ## TODO's after generating from this template
 
@@ -48,10 +49,9 @@ TIP: You can search for these tasks using `grep -n -r "TODO:" .`
 1. `docs/antora-playbook.yml`: Adjust project meta.
 1. `docs/modules/pages/index.adoc`: Edit start page.
 1. `docs/modules/nav.adoc`: Edit navigation.
-1. `main.go`: Adjust app name.
-1. `cfg/config.go`: Adjust or clear env var prefix.
+1. `main.go`: Adjust variables.
 1. Edit this README
-1. Start hacking in `cmd/example/command.go`.
+1. Start hacking in `example_command.go`.
 
 After completing a task, you can remove the comment in the files.
 
