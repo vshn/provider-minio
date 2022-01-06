@@ -21,7 +21,8 @@ func TestTableDrivenCases(t *testing.T) {
 
 			// act...
 			var err error
-			main()
+			// do something
+
 			// assert...
 			if tt.expectedError != "" {
 				require.Error(t, err)

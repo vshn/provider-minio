@@ -30,6 +30,9 @@ Template repository for common Go setups
   - Optionally install NGINX as ingress controller
   - Available `make` targets are prefixed with `kind-`
 
+* CLI and logging framework
+  - To help get you started with CLI subcommands, flags and environment variables
+
 ## TODO's after generating from this template
 
 TIP: You can search for these tasks using `grep -n -r "TODO:" .`
@@ -45,7 +48,10 @@ TIP: You can search for these tasks using `grep -n -r "TODO:" .`
 1. `docs/antora-playbook.yml`: Adjust project meta.
 1. `docs/modules/pages/index.adoc`: Edit start page.
 1. `docs/modules/nav.adoc`: Edit navigation.
+1. `main.go`: Adjust app name.
+1. `cfg/config.go`: Adjust or clear env var prefix.
 1. Edit this README
+1. Start hacking in `cmd/example/command.go`.
 
 After completing a task, you can remove the comment in the files.
 
@@ -59,7 +65,7 @@ After completing a task, you can remove the comment in the files.
    - "Branches > Branch protection rules":
      - Branch name pattern: `master`
      - Require status check to pass before merging: `["lint"]` (you may need to push come commits first)
-   -
+
 1. CodeClimate Settings
    - "Repo Settings > GitHub > Pull request status updates" (install)
    - "Repo Settings > Test coverage > Enforce {Diff,Total} Coverage" (configure to your liking)
