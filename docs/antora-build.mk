@@ -17,7 +17,7 @@ $(docs_out_dir)/index.html:
 	$(antora_cmd) $(antora_opts) docs/antora-playbook.yml
 
 .PHONY: docs-publish
-docs-publish: node_modles docs-html ## Publishes the Antora documentation on Github Pages
+docs-publish: node_modules docs-html ## Publishes the Antora documentation on Github Pages
 	npm run deploy
 
 node_modules:
