@@ -22,6 +22,13 @@ Template repository for common Go setups
   - Build default documentation with VSHN styling
   - Publish to GitHub Pages by default (opt-out)
   - Automated with GitHub workflows to build in `master` branch and (pre-)releases.
+  - Available `make` targets are prefixed with `docs-`
+
+* Local Kubernetes environment
+  - Setup Kubernetes-In-Docker (kind)
+  - Prepares a kubeconfig file in `.kind/`
+  - Optionally install NGINX as ingress controller
+  - Available `make` targets are prefixed with `kind-`
 
 ## TODO's after generating from this template
 
@@ -38,6 +45,8 @@ TIP: You can search for these tasks using `grep -n -r "TODO:" .`
 1. `docs/antora-playbook.yml`: Adjust project meta.
 1. `docs/modules/pages/index.adoc`: Edit start page.
 1. `docs/modules/nav.adoc`: Edit navigation.
+1. Edit this README
+
 After completing a task, you can remove the comment in the files.
 
 ## Other repository settings
