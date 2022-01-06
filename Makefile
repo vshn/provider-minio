@@ -8,7 +8,11 @@ MAKEFLAGS += --no-builtin-variables
 .SECONDARY:
 .DEFAULT_GOAL := help
 
+# General variables
 include Makefile.vars.mk
+
+# Documentation module. If files not found, no warning/error is printed
+-include docs/antora-preview.mk docs/antora-build.mk
 
 .PHONY: help
 help: ## Show this help
@@ -24,7 +28,7 @@ build-bin: fmt vet ## Build binary
 
 .PHONY: build-docker
 build-docker: build-bin ## Build docker image
-	docker build -t $(CONTAINER_IMG) .
+	$(DOCKER_CMD) build -t $(CONTAINER_IMG) .
 
 .PHONY: test
 test: test-go ## All-in-one test
@@ -49,3 +53,7 @@ lint: fmt vet generate ## All-in-one linting
 .PHONY: generate
 generate: ## Generate additional code and artifacts
 	@go generate ./...
+
+.PHONY: clean
+clean: ## Cleans local build artifacts
+	rm -rf node_modules $(docs_out_dir) dist .cache

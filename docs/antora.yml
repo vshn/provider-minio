@@ -1,0 +1,7 @@
+# TODO: Adjust project meta
+name: go-bootstrap
+title: Go Bootstrap
+version: master
+start_page: ROOT:index.adoc
+nav:
+  - modules/ROOT/nav.adoc

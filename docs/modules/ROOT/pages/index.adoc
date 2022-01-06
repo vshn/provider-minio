@@ -1,0 +1,21 @@
+// TODO: Edit start page
+
+= {page-component-name}
+
+[discrete]
+== Introduction
+
+Go Bootstrap is a template repository that helps bootstrapping new Go applications quickly with a standardized setup.
+
+[discrete]
+== Documentation
+
+The documentation is inspired by the https://documentation.divio.com/[Divio's documentation structure]:
+
+Tutorials:: _Learning-oriented_: Simple lessons to learn about this project.
+
+How-to guides:: _Problem-oriented_: step-by-step guides to achieve a goal.
+
+Technical reference:: _Information-oriented_: explaining the inner ongoings.
+
+Explanation:: _Understanding-oriented_: puts this project in context.

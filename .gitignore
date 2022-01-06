@@ -6,3 +6,8 @@ dist/
 # TODO: Adjust binary file name
 go-bootstrap
 *.out
+
+# Docs
+.cache/
+.public/
+node_modules/
