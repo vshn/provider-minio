@@ -3,32 +3,19 @@ package main
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/go-logr/zapr"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap/zaptest"
 )
 
-func TestTableDrivenCases(t *testing.T) {
-	tests := map[string]struct {
-		// other arguments...
-		expectedError string
-	}{
-		// TODO: test cases
-		"GivenCondition_WhenAction_ThenExpectResult": {},
+func newTestApp(t *testing.T) *cli.App {
+	return &cli.App{
+		Metadata: map[string]interface{}{
+			loggerMetadataKeyName: zapr.NewLogger(zaptest.NewLogger(t)),
+		},
 	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			// arrange...
+}
 
-			// act...
-			var err error
-			// do something
-
-			// assert...
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
-		})
-	}
+func newAppContext(t *testing.T) *cli.Context {
+	return cli.NewContext(newTestApp(t), nil, nil)
 }
