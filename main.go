@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -27,11 +30,12 @@ var (
 )
 
 func main() {
-	app := newApp()
-	_ = app.Run(os.Args)
+	ctx, stop, app := newApp()
+	defer stop()
+	_ = app.RunContext(ctx, os.Args)
 }
 
-func newApp() *cli.App {
+func newApp() (context.Context, context.CancelFunc, *cli.App) {
 	cli.VersionPrinter = func(_ *cli.Context) {
 		fmt.Printf("version=%s revision=%s date=%s\n", version, commit, date)
 	}
@@ -82,7 +86,9 @@ func newApp() *cli.App {
 		logMetadata(AppLogger(context))
 		return nil
 	}
-	return app
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	go listenForSignal(ctx, app, stop)
+	return ctx, stop, app
 }
 
 func before(c *cli.Context) error {
@@ -125,4 +131,12 @@ func envVars(suffixes ...string) []string {
 		arr[i] = env(suffixes[i])
 	}
 	return arr
+}
+
+func listenForSignal(ctx context.Context, app *cli.App, stop context.CancelFunc) {
+	select {
+	case <-ctx.Done():
+		stop()
+		terminate(app)
+	}
 }
