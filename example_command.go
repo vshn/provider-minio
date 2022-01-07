@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/urfave/cli/v2"
 )
@@ -37,8 +38,17 @@ func (c *exampleCommand) validate(context *cli.Context) error {
 }
 
 func (c *exampleCommand) execute(context *cli.Context) error {
-	SetSignalHandler(context, c.shutdown)
 	log := AppLogger(context).WithName(exampleCommandName)
+	go func() {
+		// This part enables graceful shutdowns. Can be removed if not needed.
+		<-context.Done()
+		err := c.shutdown(context)
+		if err != nil {
+			log.Error(err, "cannot properly shut down")
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}()
 	log.Info("Hello from example command!", "config", c)
 	return nil
 }

@@ -87,7 +87,6 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 		return nil
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	go listenForSignal(ctx, app, stop)
 	return ctx, stop, app
 }
 
@@ -131,12 +130,4 @@ func envVars(suffixes ...string) []string {
 		arr[i] = env(suffixes[i])
 	}
 	return arr
-}
-
-func listenForSignal(ctx context.Context, app *cli.App, stop context.CancelFunc) {
-	select {
-	case <-ctx.Done():
-		stop()
-		terminate(app)
-	}
 }
