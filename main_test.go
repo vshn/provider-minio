@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"sync/atomic"
 	"testing"
 
 	"github.com/go-logr/zapr"
@@ -8,14 +10,11 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func newTestApp(t *testing.T) *cli.App {
-	return &cli.App{
-		Metadata: map[string]interface{}{
-			LoggerMetadataKeyName: zapr.NewLogger(zaptest.NewLogger(t)),
-		},
-	}
-}
-
 func newAppContext(t *testing.T) *cli.Context {
-	return cli.NewContext(newTestApp(t), nil, nil)
+	logger := zapr.NewLogger(zaptest.NewLogger(t))
+	instance := &atomic.Value{}
+	instance.Store(logger)
+	return cli.NewContext(&cli.App{}, nil, &cli.Context{
+		Context: context.WithValue(context.Background(), loggerContextKey{}, instance),
+	})
 }

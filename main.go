@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -45,6 +45,8 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 		compiled = time.Time{}
 	}
 
+	logInstance := &atomic.Value{}
+	logInstance.Store(logr.Discard())
 	app := &cli.App{
 		Name:     appName,
 		Usage:    appLongName,
@@ -83,30 +85,31 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 		if hasSubcommands {
 			return cli.ShowAppHelp(context)
 		}
-		logMetadata(AppLogger(context))
+		logMetadata(context)
 		return nil
 	}
-	ctx, stop := signal.NotifyContext(context.WithValue(context.Background(), AppContextKeyName, app), syscall.SIGINT, syscall.SIGTERM)
+	// There is logr.NewContext(...) which returns a context that carries the logger instance.
+	// However, since we are configuring and replacing this logger after starting up and parsing the flags,
+	// we'll store a thread-safe atomic reference.
+	parentCtx := context.WithValue(context.Background(), loggerContextKey{}, logInstance)
+	ctx, stop := signal.NotifyContext(parentCtx, syscall.SIGINT, syscall.SIGTERM)
 	return ctx, stop, app
 }
 
 func before(c *cli.Context) error {
-	useProductionConfig := strings.EqualFold("JSON", c.String("log-format"))
-	logger := newLogger(appName, c.Bool("debug"), useProductionConfig)
-	SetAppLogger(c, logger)
-	if !c.Args().Present() {
-		// skip printing metadata if displaying the usage
-		return nil
+	setupLogging(c)
+	if c.Args().Present() {
+		// only print metadata if not displaying usage
+		logMetadata(c)
 	}
-	log := logger.WithValues()
-	if !useProductionConfig {
-		log = log.WithValues("version", version)
-	}
-	logMetadata(logger)
 	return nil
 }
 
-func logMetadata(log logr.Logger) {
+func logMetadata(c *cli.Context) {
+	log := AppLogger(c)
+	if !usesProductionLoggingConfig(c) {
+		log = log.WithValues("version", version)
+	}
 	log.WithValues(
 		"date", date,
 		"commit", commit,
