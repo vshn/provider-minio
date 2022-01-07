@@ -1,33 +1,20 @@
 package main
 
 import (
+	"context"
+	"sync/atomic"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/go-logr/zapr"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap/zaptest"
 )
 
-func TestTableDrivenCases(t *testing.T) {
-	tests := map[string]struct {
-		// other arguments...
-		expectedError string
-	}{
-		// TODO: test cases
-		"GivenCondition_WhenAction_ThenExpectResult": {},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			// arrange...
-
-			// act...
-			var err error
-			main()
-			// assert...
-			if tt.expectedError != "" {
-				require.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
-		})
-	}
+func newAppContext(t *testing.T) *cli.Context {
+	logger := zapr.NewLogger(zaptest.NewLogger(t))
+	instance := &atomic.Value{}
+	instance.Store(logger)
+	return cli.NewContext(&cli.App{}, nil, &cli.Context{
+		Context: context.WithValue(context.Background(), loggerContextKey{}, instance),
+	})
 }
