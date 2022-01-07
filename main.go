@@ -36,26 +36,17 @@ func main() {
 }
 
 func newApp() (context.Context, context.CancelFunc, *cli.App) {
-	cli.VersionPrinter = func(_ *cli.Context) {
-		fmt.Printf("version=%s revision=%s date=%s\n", version, commit, date)
-	}
-
-	compiled, err := time.Parse(time.RFC3339, date)
-	if err != nil {
-		compiled = time.Time{}
-	}
-
 	logInstance := &atomic.Value{}
 	logInstance.Store(logr.Discard())
 	app := &cli.App{
 		Name:     appName,
 		Usage:    appLongName,
-		Version:  version,
-		Compiled: compiled,
+		Version:  fmt.Sprintf("%s, revision=%s, date=%s", version, commit, date),
+		Compiled: compilationDate(),
 
 		EnableBashCompletion: true,
 
-		Before: before,
+		Before: beforeAction,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "debug",
@@ -81,13 +72,7 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 		},
 	}
 	hasSubcommands := len(app.Commands) > 0
-	app.Action = func(context *cli.Context) error {
-		if hasSubcommands {
-			return cli.ShowAppHelp(context)
-		}
-		logMetadata(context)
-		return nil
-	}
+	app.Action = rootAction(hasSubcommands)
 	// There is logr.NewContext(...) which returns a context that carries the logger instance.
 	// However, since we are configuring and replacing this logger after starting up and parsing the flags,
 	// we'll store a thread-safe atomic reference.
@@ -96,7 +81,17 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 	return ctx, stop, app
 }
 
-func before(c *cli.Context) error {
+func rootAction(hasSubcommands bool) func(context *cli.Context) error {
+	return func(context *cli.Context) error {
+		if hasSubcommands {
+			return cli.ShowAppHelp(context)
+		}
+		logMetadata(context)
+		return nil
+	}
+}
+
+func beforeAction(c *cli.Context) error {
 	setupLogging(c)
 	if c.Args().Present() {
 		// only print metadata if not displaying usage
@@ -133,4 +128,13 @@ func envVars(suffixes ...string) []string {
 		arr[i] = env(suffixes[i])
 	}
 	return arr
+}
+
+func compilationDate() time.Time {
+	compiled, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		// an empty Time{} causes cli.App to guess it from binary's file timestamp.
+		return time.Time{}
+	}
+	return compiled
 }
