@@ -78,6 +78,12 @@ After completing a task, you can remove the comment in the files.
      - Branch name pattern: `master`
      - Require status check to pass before merging: `["lint"]` (you may need to push come commits first)
 
+1. GitHub Issue labels
+  - "Issues > Labels > New Label" for the following labels with color suggestions:
+    - `change` (`#D93F0B`)
+    - `dependency` (`#ededed`)
+    - `breaking` (`#FBCA04`)
+
 1. CodeClimate Settings
    - "Repo Settings > GitHub > Pull request status updates" (install)
    - "Repo Settings > Test coverage > Enforce {Diff,Total} Coverage" (configure to your liking)
