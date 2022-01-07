@@ -10,18 +10,27 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const loggerMetadataKeyName = "logger"
+const (
+	// LoggerMetadataKeyName is the key which can be used to retrieve the logr.Logger from cli.App's Metadata.
+	// Usage example:
+	//  app.Metadata[LoggerMetadataKeyName].(logr.Logger)
+	LoggerMetadataKeyName = "cli:logger"
+	// AppContextKeyName is the key which can be used to retrieve the cli.App from context.Context.
+	// Usage example:
+	//	ctx.Value(AppContextKeyName).(*cli.App)
+	AppContextKeyName = "cli:app"
+)
 
 // AppLogger retrieves the application-wide logger instance from the cli.Context's Metadata.
 // This function will return nil if SetAppLogger was not called before this function is called.
 func AppLogger(c *cli.Context) logr.Logger {
-	return c.App.Metadata[loggerMetadataKeyName].(logr.Logger)
+	return c.App.Metadata[LoggerMetadataKeyName].(logr.Logger)
 }
 
 // SetAppLogger stores the application-wide logger instance to the cli.Context's Metadata,
 // so that it can later be retrieved by AppLogger.
 func SetAppLogger(c *cli.Context, logger logr.Logger) {
-	c.App.Metadata[loggerMetadataKeyName] = logger
+	c.App.Metadata[LoggerMetadataKeyName] = logger
 }
 
 func newLogger(name string, debug bool, useProductionConfig bool) logr.Logger {

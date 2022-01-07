@@ -86,7 +86,7 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 		logMetadata(AppLogger(context))
 		return nil
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.WithValue(context.Background(), AppContextKeyName, app), syscall.SIGINT, syscall.SIGTERM)
 	return ctx, stop, app
 }
 

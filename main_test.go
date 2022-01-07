@@ -11,7 +11,7 @@ import (
 func newTestApp(t *testing.T) *cli.App {
 	return &cli.App{
 		Metadata: map[string]interface{}{
-			loggerMetadataKeyName: zapr.NewLogger(zaptest.NewLogger(t)),
+			LoggerMetadataKeyName: zapr.NewLogger(zaptest.NewLogger(t)),
 		},
 	}
 }
