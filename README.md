@@ -1,4 +1,16 @@
 # go-bootstrap
+
+[![Build](https://img.shields.io/github/workflow/status/vshn/go-bootstrap/Test)][build]
+![Go version](https://img.shields.io/github/go-mod/go-version/vshn/go-bootstrap)
+[![Version](https://img.shields.io/github/v/release/vshn/go-bootstrap)][releases]
+[![Maintainability](https://img.shields.io/codeclimate/maintainability/vshn/go-bootstrap)][codeclimate]
+[![Coverage](https://img.shields.io/codeclimate/coverage/vshn/go-bootstrap)][codeclimate]
+[![GitHub downloads](https://img.shields.io/github/downloads/vshn/go-bootstrap/total)][releases]
+
+[build]: https://github.com/vshn/go-bootstrap/actions?query=workflow%3ATest
+[releases]: https://github.com/vshn/go-bootstrap/releases
+[codeclimate]: https://codeclimate.com/github/vshn/go-bootstrap
+
 Template repository for common Go setups
 
 ## Features
@@ -50,7 +62,7 @@ TIP: You can search for these tasks using `grep -n -r "TODO:" .`
 1. `docs/modules/pages/index.adoc`: Edit start page.
 1. `docs/modules/nav.adoc`: Edit navigation.
 1. `main.go`: Adjust variables.
-1. Edit this README
+1. Edit this README (including badges links)
 1. Start hacking in `example_command.go`.
 
 After completing a task, you can remove the comment in the files.
