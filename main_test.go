@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"sync/atomic"
 	"testing"
 
@@ -14,7 +15,7 @@ func newAppContext(t *testing.T) *cli.Context {
 	logger := zapr.NewLogger(zaptest.NewLogger(t))
 	instance := &atomic.Value{}
 	instance.Store(logger)
-	return cli.NewContext(&cli.App{}, nil, &cli.Context{
+	return cli.NewContext(&cli.App{}, flag.NewFlagSet("", flag.ContinueOnError), &cli.Context{
 		Context: context.WithValue(context.Background(), loggerContextKey{}, instance),
 	})
 }

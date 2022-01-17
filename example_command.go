@@ -23,16 +23,18 @@ func newExampleCommand() *cli.Command {
 		Before: command.validate,
 		Action: command.execute,
 		Flags: []cli.Flag{
-			&cli.StringFlag{Destination: &command.ExampleFlag, Name: "flag", EnvVars: envVars("EXAMPLE_FLAG"), Value: "foo", Usage: "a demonstration how to configure the command"},
+			&cli.StringFlag{Destination: &command.ExampleFlag, Name: "flag", EnvVars: envVars("EXAMPLE_FLAG"), Value: "foo", Usage: "a demonstration how to configure the command", Required: true},
 		},
 	}
 }
 
 func (c *exampleCommand) validate(context *cli.Context) error {
+	_ = LogMetadata(context)
 	log := AppLogger(context).WithName(exampleCommandName)
 	log.V(1).Info("validating config")
-	if c.ExampleFlag == "" {
-		return fmt.Errorf("option cannot be empty: %s", "flag")
+	// The `Required` property in the StringFlag above already checks if it's non-empty.
+	if len(c.ExampleFlag) <= 2 {
+		return fmt.Errorf("option needs at least 3 characters: %s", "flag")
 	}
 	return nil
 }
