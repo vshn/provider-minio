@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"runtime"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -32,7 +31,12 @@ var (
 func main() {
 	ctx, stop, app := newApp()
 	defer stop()
-	_ = app.RunContext(ctx, os.Args)
+	err := app.RunContext(ctx, os.Args)
+	// If required flags aren't set, it will return with error before we could set up logging
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
 }
 
 func newApp() (context.Context, context.CancelFunc, *cli.App) {
@@ -46,7 +50,7 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 
 		EnableBashCompletion: true,
 
-		Before: beforeAction,
+		Before: setupLogging,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "debug",
@@ -86,34 +90,8 @@ func rootAction(hasSubcommands bool) func(context *cli.Context) error {
 		if hasSubcommands {
 			return cli.ShowAppHelp(context)
 		}
-		logMetadata(context)
-		return nil
+		return LogMetadata(context)
 	}
-}
-
-func beforeAction(c *cli.Context) error {
-	setupLogging(c)
-	if c.Args().Present() {
-		// only print metadata if not displaying usage
-		logMetadata(c)
-	}
-	return nil
-}
-
-func logMetadata(c *cli.Context) {
-	log := AppLogger(c)
-	if !usesProductionLoggingConfig(c) {
-		log = log.WithValues("version", version)
-	}
-	log.WithValues(
-		"date", date,
-		"commit", commit,
-		"go_os", runtime.GOOS,
-		"go_arch", runtime.GOARCH,
-		"go_version", runtime.Version(),
-		"uid", os.Getuid(),
-		"gid", os.Getgid(),
-	).Info("Starting up " + appName)
 }
 
 // env combines envPrefix with given suffix delimited by underscore.

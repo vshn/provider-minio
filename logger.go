@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"runtime"
 	"strings"
 	"sync/atomic"
 
@@ -19,9 +21,29 @@ func AppLogger(c *cli.Context) logr.Logger {
 	return c.Context.Value(loggerContextKey{}).(*atomic.Value).Load().(logr.Logger)
 }
 
-func setupLogging(c *cli.Context) {
+// LogMetadata prints various metadata to the root logger.
+// It prints version, architecture and current user ID and returns nil.
+func LogMetadata(c *cli.Context) error {
+	logger := AppLogger(c)
+	if !usesProductionLoggingConfig(c) {
+		logger = logger.WithValues("version", version)
+	}
+	logger.WithValues(
+		"date", date,
+		"commit", commit,
+		"go_os", runtime.GOOS,
+		"go_arch", runtime.GOARCH,
+		"go_version", runtime.Version(),
+		"uid", os.Getuid(),
+		"gid", os.Getgid(),
+	).Info("Starting up " + appName)
+	return nil
+}
+
+func setupLogging(c *cli.Context) error {
 	logger := newZapLogger(appName, c.Bool("debug"), usesProductionLoggingConfig(c))
 	c.Context.Value(loggerContextKey{}).(*atomic.Value).Store(logger)
+	return nil
 }
 
 func usesProductionLoggingConfig(c *cli.Context) bool {

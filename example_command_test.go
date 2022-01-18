@@ -14,7 +14,7 @@ func TestExampleCommand_Validate(t *testing.T) {
 	}{
 		// TODO: test cases
 		"GivenEmptyFlag_ThenExpectError": {
-			expectedError: "option cannot be empty: flag",
+			expectedError: "option needs at least 3 characters: flag",
 		},
 		"GivenValidConfig_ThenExpectNoError": {
 			givenExampleFlag: "test",
