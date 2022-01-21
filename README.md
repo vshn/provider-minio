@@ -73,10 +73,11 @@ After completing a task, you can remove the comment in the files.
    - "Options > Wiki" (disable)
    - "Options > Allow auto-merge" (enable)
    - "Options > Automatically delete head branches" (enable)
-   - "Branches > Default branch" (change to `master`) (VSHN's default)
+   - "Collaborators & Teams > Add Teams and users to grant maintainer permissions
    - "Branches > Branch protection rules":
      - Branch name pattern: `master`
      - Require status check to pass before merging: `["lint"]` (you may need to push come commits first)
+   - "Pages > Source": Branch `gh-pages`
 
 1. GitHub Issue labels
    - "Issues > Labels > New Label" for the following labels with color suggestions:
@@ -95,8 +96,12 @@ By default, it is automatically published to GitHub Pages in `gh-pages` branch, 
 
 ### Setup GitHub Pages
 
-Let's prepare and empty `gh-pages` branch, but make sure to **commit or stash current changes first!**
+Once you generated a new repository using this template, the initial commit automatically runs a Job that creates the documentation in the `gh-pages` branch.
+All you need to do is then to enable Pages in the settings.
 
+The `gh-pages` branch is a parent-less commit that only contains the Antora-generated files.
+
+However, if that's not the case or if you are setting up Antora in an existing repository, here's how you can achieve the same, but make sure to **commit or stash current changes first!**
 ```bash
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 initial_commit=$(git rev-list --max-parents=0 HEAD)
@@ -108,13 +113,14 @@ git switch -f $current_branch
 ```
 
 And you're done!
-GitHub automatically recognizes and sets up Pages if there's a `gh-pages` branch.
+GitHub automatically recognizes activity and sets up Pages if there's a `gh-pages` branch.
 
 ---
 
 If you want to skip deployment to GitHub Pages you need to delete specific files and references:
-`rm -f .github/workflows/docs.yml docs/package*.json docs/antora-playbook.yml docs/antora-build.mk`
+`rm -f .github/workflows/docs.yml docs/package*.json docs/antora-playbook.yml docs/antora-build.mk`.
+Also don't forget to delete the branch and disable Pages in the repository settings.
 
 ---
 
-If you want to remove documentation completely simply run `rm -rf docs .github/workflows/docs.yml`
+If you want to remove documentation completely simply run `rm -rf docs .github/workflows/docs.yml`.

@@ -11,5 +11,5 @@
 .Technical reference
 //* xref:references/example.adoc[Example Reference]
 
-//.Explanation
+.Explanation
 //* xref:explanations/example.adoc[Example Explanation]
