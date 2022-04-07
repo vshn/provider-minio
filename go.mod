@@ -7,7 +7,7 @@ require (
 	github.com/go-logr/logr v1.2.2
 	github.com/go-logr/zapr v1.2.3
 	github.com/stretchr/testify v1.7.0
-	github.com/urfave/cli/v2 v2.3.0
+	github.com/urfave/cli/v2 v2.4.0
 	go.uber.org/zap v1.21.0
 	sigs.k8s.io/kind v0.11.1
 )
@@ -16,7 +16,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/benbjohnson/clock v1.1.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
@@ -24,8 +24,7 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/russross/blackfriday/v2 v2.0.1 // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/cobra v1.1.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
