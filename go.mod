@@ -4,7 +4,7 @@ module github.com/vshn/go-bootstrap
 go 1.17
 
 require (
-	github.com/go-logr/logr v1.2.2
+	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.4.0
