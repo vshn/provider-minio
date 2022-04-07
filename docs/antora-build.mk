@@ -2,7 +2,7 @@ docs_out_dir := ./.public
 
 docker_opts ?= --rm --tty --user "$$(id -u)"
 
-antora_build_version ?= 2.3.3
+antora_build_version ?= 3.0.1
 antora_cmd ?= $(DOCKER_CMD) run $(docker_opts) --volume "$${PWD}":/antora docker.io/vshn/antora:$(antora_build_version)
 antora_opts ?= --cache-dir=.cache/antora
 
