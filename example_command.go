@@ -62,6 +62,6 @@ func (c *exampleCommand) execute(context *cli.Context) error {
 
 func (c *exampleCommand) shutdown(context *cli.Context) error {
 	log := AppLogger(context).WithName(exampleCommandName)
-	log.Info("Shutting down example command")
+	log.Info(fmt.Sprintf("Shutting down %q command", exampleCommandName))
 	return nil
 }
