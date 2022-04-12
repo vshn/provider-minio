@@ -68,9 +68,9 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 		Commands: []*cli.Command{
 			newExampleCommand(),
 		},
-		ExitErrHandler: func(context *cli.Context, err error) {
+		ExitErrHandler: func(ctx *cli.Context, err error) {
 			if err != nil {
-				AppLogger(context).Error(err, "fatal error")
+				AppLogger(ctx).Error(err, "fatal error")
 				cli.HandleExitCoder(cli.Exit("", 1))
 			}
 		},
@@ -86,11 +86,11 @@ func newApp() (context.Context, context.CancelFunc, *cli.App) {
 }
 
 func rootAction(hasSubcommands bool) func(context *cli.Context) error {
-	return func(context *cli.Context) error {
+	return func(ctx *cli.Context) error {
 		if hasSubcommands {
-			return cli.ShowAppHelp(context)
+			return cli.ShowAppHelp(ctx)
 		}
-		return LogMetadata(context)
+		return LogMetadata(ctx)
 	}
 }
 

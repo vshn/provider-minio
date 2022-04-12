@@ -28,9 +28,9 @@ func newExampleCommand() *cli.Command {
 	}
 }
 
-func (c *exampleCommand) validate(context *cli.Context) error {
-	_ = LogMetadata(context)
-	log := AppLogger(context).WithName(exampleCommandName)
+func (c *exampleCommand) validate(ctx *cli.Context) error {
+	_ = LogMetadata(ctx)
+	log := AppLogger(ctx).WithName(exampleCommandName)
 	log.V(1).Info("validating config")
 	// The `Required` property in the StringFlag above already checks if it's non-empty.
 	if len(c.ExampleFlag) <= 2 {
@@ -39,8 +39,8 @@ func (c *exampleCommand) validate(context *cli.Context) error {
 	return nil
 }
 
-func (c *exampleCommand) execute(context *cli.Context) error {
-	log := AppLogger(context).WithName(exampleCommandName)
+func (c *exampleCommand) execute(ctx *cli.Context) error {
+	log := AppLogger(ctx).WithName(exampleCommandName)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -48,8 +48,8 @@ func (c *exampleCommand) execute(context *cli.Context) error {
 		// Can be removed if not needed.
 		// Please note that this example is incomplete and doesn't cover all cases when properly implementing shutdowns.
 		defer wg.Done()
-		<-context.Done()
-		err := c.shutdown(context)
+		<-ctx.Done()
+		err := c.shutdown(ctx)
 		if err != nil {
 			log.Error(err, "cannot properly shut down")
 			os.Exit(2)
@@ -60,8 +60,8 @@ func (c *exampleCommand) execute(context *cli.Context) error {
 	return nil
 }
 
-func (c *exampleCommand) shutdown(context *cli.Context) error {
-	log := AppLogger(context).WithName(exampleCommandName)
+func (c *exampleCommand) shutdown(ctx *cli.Context) error {
+	log := AppLogger(ctx).WithName(exampleCommandName)
 	log.Info(fmt.Sprintf("Shutting down %q command", exampleCommandName))
 	return nil
 }
