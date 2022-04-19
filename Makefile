@@ -60,3 +60,4 @@ generate: ## Generate additional code and artifacts
 .PHONY: clean
 clean: ## Cleans local build artifacts
 	rm -rf docs/node_modules $(docs_out_dir) dist .cache
+	docker rmi $(CONTAINER_IMG) || true
