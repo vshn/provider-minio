@@ -6,5 +6,6 @@
 package tools
 
 import (
-// Add any build-time dependencies here with blank imports like `_ "package"`
+	// To have kind updated via Renovate.
+	_ "sigs.k8s.io/kind"
 )
