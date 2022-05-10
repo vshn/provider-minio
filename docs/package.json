@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "gh-pages": "3.2.3"
+    "gh-pages": "4.0.0"
   },
   "scripts": {
     "deploy": "gh-pages -d ../.public --dotfiles -m \"Update documentation rev $(git rev-parse --short HEAD), $(date --utc '+%Y-%m-%d %H:%M')\""
