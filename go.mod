@@ -1,7 +1,7 @@
 // TODO: Replace module name
 module github.com/vshn/go-bootstrap
 
-go 1.17
+go 1.18
 
 require (
 	github.com/go-logr/logr v1.2.3
