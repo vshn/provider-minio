@@ -2,7 +2,7 @@ module kind
 
 go 1.18
 
-require sigs.k8s.io/kind v0.13.0
+require sigs.k8s.io/kind v0.14.0
 
 require (
 	github.com/BurntSushi/toml v1.0.0 // indirect
