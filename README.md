@@ -104,7 +104,7 @@ The `gh-pages` branch is a parent-less commit that only contains the Antora-gene
 However, if that's not the case or if you are setting up Antora in an existing repository, here's how you can achieve the same, but make sure to **commit or stash current changes first!**
 ```bash
 current_branch=$(git rev-parse --abbrev-ref HEAD)
-initial_commit=$(git rev-list --max-parents=0 HEAD)
+initial_commit=$(git rev-list --max-parents=0 HEAD | tail -n 1)
 git switch --create gh-pages $initial_commit
 git rm -r --cached .
 git commit -m "Prepare gh-pages branch"
