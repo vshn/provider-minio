@@ -58,6 +58,6 @@ generate: ## Generate additional code and artifacts
 	@go generate ./...
 
 .PHONY: clean
-clean: ## Cleans local build artifacts
-	rm -rf docs/node_modules $(docs_out_dir) dist .cache
+clean: kind-clean ## Cleans local build artifacts
 	docker rmi $(CONTAINER_IMG) || true
+	rm -rf docs/node_modules $(docs_out_dir) dist .cache $(WORK_DIR)
