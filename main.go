@@ -24,8 +24,9 @@ var (
 	appLongName = "a generic bootstrapping project"
 
 	// TODO: Adjust or clear env var prefix
-	// envPrefix is the global prefix to use for the keys in environment variables
-	envPrefix = "BOOTSTRAP"
+	// envPrefix is the global prefix to use for the keys in environment variables.
+	// Include a delimiter like `_` if required.
+	envPrefix = "BOOTSTRAP_"
 )
 
 func main() {
@@ -96,7 +97,7 @@ func rootAction(hasSubcommands bool) func(context *cli.Context) error {
 
 // env combines envPrefix with given suffix delimited by underscore.
 func env(suffix string) string {
-	return envPrefix + "_" + suffix
+	return envPrefix + suffix
 }
 
 // envVars combines envPrefix with each given suffix delimited by underscore.
