@@ -32,7 +32,7 @@ jobs:
         run: make test
 
       - name: Upload code coverage report to Code Climate
-        uses: paambaati/codeclimate-action@v3.1.0
+        uses: paambaati/codeclimate-action@v3.1.1
         env:
           # TODO: Update Reporter ID after importing in codeclimate.com
           CC_TEST_REPORTER_ID: 8297d060a2a57278046db1ec5bb0e831a5e1c4e3624ad3991492157b60fc8433
