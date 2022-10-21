@@ -3,13 +3,10 @@
 [![Build](https://img.shields.io/github/workflow/status/vshn/go-bootstrap/Test)][build]
 ![Go version](https://img.shields.io/github/go-mod/go-version/vshn/go-bootstrap)
 [![Version](https://img.shields.io/github/v/release/vshn/go-bootstrap)][releases]
-[![Maintainability](https://img.shields.io/codeclimate/maintainability/vshn/go-bootstrap)][codeclimate]
-[![Coverage](https://img.shields.io/codeclimate/coverage/vshn/go-bootstrap)][codeclimate]
 [![GitHub downloads](https://img.shields.io/github/downloads/vshn/go-bootstrap/total)][releases]
 
 [build]: https://github.com/vshn/go-bootstrap/actions?query=workflow%3ATest
 [releases]: https://github.com/vshn/go-bootstrap/releases
-[codeclimate]: https://codeclimate.com/github/vshn/go-bootstrap
 
 Template repository for common Go setups
 
@@ -17,8 +14,8 @@ Template repository for common Go setups
 
 * GitHub Workflows
   - Build (Go & Docker image)
-  - Test (including CodeClimate)
-  - Lint (Go)
+  - Test
+  - Lint (Go & GolangCI)
   - Release (Goreleaser & Changelog generator)
 
 * GitHub issue templates
@@ -56,7 +53,6 @@ TIP: You can search for these tasks using `grep -n -r "TODO:" .`
 1. `Dockerfile`: Adjust binary file name.
 1. `Makefile.vars.mk`: Adjust project meta.
 1. `.github/ISSUE_TEMPLATE/config.yml` (optional): Enable forwarding questions to GitHub Discussions or other page.
-1. `.github/workflows/test.yml`: Update CodeClimate reporter ID (to be found in codeclimate.com Test coverage settings)
 1. `docs/antora.yml`: Adjust project meta.
 1. `docs/antora-playbook.yml`: Adjust project meta.
 1. `docs/modules/pages/index.adoc`: Edit start page.
@@ -84,10 +80,6 @@ After completing a task, you can remove the comment in the files.
      - `change` (`#D93F0B`)
      - `dependency` (`#ededed`)
      - `breaking` (`#FBCA04`)
-
-1. CodeClimate Settings
-   - "Repo Settings > GitHub > Pull request status updates" (install)
-   - "Repo Settings > Test coverage > Enforce {Diff,Total} Coverage" (configure to your liking)
 
 ## Antora documentation
 
