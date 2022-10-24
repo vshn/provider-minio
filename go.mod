@@ -6,7 +6,7 @@ go 1.19
 require (
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.17.1
 	go.uber.org/zap v1.23.0
 )
