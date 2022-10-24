@@ -38,7 +38,7 @@ test: test-go ## All-in-one test
 
 .PHONY: test-go
 test-go: ## Run unit tests against code
-	go test -race -coverprofile cover.out -covermode atomic ./...
+	go test -race -covermode atomic ./...
 
 .PHONY: fmt
 fmt: ## Run 'go fmt' against code
@@ -49,7 +49,10 @@ vet: ## Run 'go vet' against code
 	go vet ./...
 
 .PHONY: lint
-lint: fmt vet generate ## All-in-one linting
+lint: fmt generate vet git-diff ## All-in-one linting
+
+.PHONY: git-diff
+git-diff:
 	@echo 'Check for uncommitted changes ...'
 	git diff --exit-code
 
