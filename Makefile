@@ -17,6 +17,8 @@ include Makefile.vars.mk
 # Optional kind module
 -include kind/kind.mk
 
+golangci_bin = $(go_bin)/golangci-lint
+
 .PHONY: help
 help: ## Show this help
 	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -49,7 +51,11 @@ vet: ## Run 'go vet' against code
 	go vet ./...
 
 .PHONY: lint
-lint: fmt generate vet git-diff ## All-in-one linting
+lint: generate fmt golangci-lint git-diff ## All-in-one linting
+
+.PHONY: golangci-lint
+golangci-lint: $(golangci_bin) ## Run golangci linters
+	$(golangci_bin) run --timeout 5m --out-format colored-line-number ./...
 
 .PHONY: git-diff
 git-diff:
@@ -64,3 +70,6 @@ generate: ## Generate additional code and artifacts
 clean: kind-clean ## Cleans local build artifacts
 	docker rmi $(CONTAINER_IMG) || true
 	rm -rf docs/node_modules $(docs_out_dir) dist .cache $(WORK_DIR)
+
+$(golangci_bin): | $(go_bin)
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go_bin)"
