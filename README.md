@@ -1,6 +1,6 @@
 # go-bootstrap
 
-[![Build](https://img.shields.io/github/workflow/status/vshn/go-bootstrap/Test)][build]
+[![Build](https://img.shields.io/github/actions/workflow/status/vshn/go-bootstrap/.github/workflows/test.yml?branch=master)][build]
 ![Go version](https://img.shields.io/github/go-mod/go-version/vshn/go-bootstrap)
 [![Version](https://img.shields.io/github/v/release/vshn/go-bootstrap)][releases]
 [![GitHub downloads](https://img.shields.io/github/downloads/vshn/go-bootstrap/total)][releases]
