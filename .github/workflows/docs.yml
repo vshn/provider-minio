@@ -15,6 +15,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+
     - name: Configure Git
       run: |
         git config user.name "Antora via GitHub Actions"
@@ -26,10 +27,12 @@ jobs:
       with:
         input_string: ${{ github.ref }}
         version_extractor_regex: '\/v(.*)$'
+
     - name: Set variables
       run: |
         echo "MINOR_VERSION=${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}" >> $GITHUB_ENV
         echo "BRANCH_NAME=docs/v${{ steps.semver.outputs.major }}.${{ steps.semver.outputs.minor }}" >> $GITHUB_ENV
+
     - name: Set branch name for Prerelease
       if: ${{ steps.semver.outputs.prerelease != '' }}
       run: echo "BRANCH_NAME=${{ env.BRANCH_NAME }}-rc" >> $GITHUB_ENV
@@ -37,9 +40,11 @@ jobs:
     - name: Checkout remote branch if exists
       run: git checkout ${{ env.BRANCH_NAME }}
       continue-on-error: true
+
     - name: Rebase if possible
       run: git rebase ${GITHUB_REF##*/} ${{ env.BRANCH_NAME }}
       continue-on-error: true
+
     - name: Create new branch if not existing
       run: git switch --create ${{ env.BRANCH_NAME }}
       continue-on-error: true
@@ -47,6 +52,7 @@ jobs:
     - name: Patch Antora file for Release
       run: yq eval 'del(.prerelease) | del (.display_version) | .version = "${{ env.MINOR_VERSION }}"' -i docs/antora.yml
       if: ${{ steps.semver.outputs.prerelease == '' }}
+
     - name: Patch Antora file for Prerelease
       run: yq eval 'del (.display_version) | .version = "${{ env.MINOR_VERSION }}", .prerelease = "-${{ steps.semver.outputs.prerelease }}"' -i docs/antora.yml
       if: ${{ steps.semver.outputs.prerelease != '' }}
@@ -54,6 +60,7 @@ jobs:
     - name: Commit
       run: git commit --all --message "Update version for Antora"
       continue-on-error: true
+
     - name: Push
       run: git push --atomic --force --set-upstream origin ${{ env.BRANCH_NAME }}
 
