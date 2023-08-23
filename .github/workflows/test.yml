@@ -1,20 +1,36 @@
 name: Test
 
 on:
-  pull_request: {}
+  pull_request:
+    branches:
+      - "*"
+    paths-ignore:
+      - docs/**
   push:
     branches:
       - master
+    paths-ignore:
+      - docs/**
 
 jobs:
-  unit-test:
+  go-unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-go@v4
+      - name: Determine Go version from go.mod
+        run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
+
+      - uses: actions/setup-go@v3
         with:
-          go-version-file: go.mod
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Run tests
-        run: make test
+        run: make test-integration

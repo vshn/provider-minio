@@ -1,0 +1,12 @@
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  labels:
+    name: provider-minio
+  name: provider-minio
+spec:
+  package: "" # patched
+  controllerConfigRef:
+    name: providerconfig-minio
+  packagePullPolicy: Always
