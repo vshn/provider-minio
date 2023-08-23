@@ -2,13 +2,12 @@ FROM docker.io/library/alpine:3.17 as runtime
 
 RUN \
   apk add --update --no-cache \
-    bash \
-    curl \
-    ca-certificates \
-    tzdata
+  bash \
+  curl \
+  ca-certificates \
+  tzdata
 
-# TODO: Adjust binary file name
-ENTRYPOINT ["go-bootstrap"]
+ENTRYPOINT ["provider-minio"]
 COPY go-bootstrap /usr/bin/
 
 USER 65536:0

@@ -3,8 +3,7 @@
 /.github/release-notes.md
 
 # Build
-# TODO: Adjust binary file name
-/go-bootstrap
+/provider-minio
 *.out
 
 # Docs

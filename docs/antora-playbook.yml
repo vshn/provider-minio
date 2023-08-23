@@ -1,8 +1,7 @@
 site:
-  # TODO: Adjust project meta
-  title: Go Bootstrap
-  start_page: go-bootstrap::index.adoc
-  url: https://vshn.github.io/go-bootstrap
+  title: Crossplane Provider Minio
+  start_page: provider-minio:index.adoc
+  url: https://vshn.github.io/provider-minio
 content:
   sources:
     - url: ../antora

@@ -1,11 +1,9 @@
-// TODO: Edit start page
-
 = {page-component-name}
 
 [discrete]
 == Introduction
 
-Go Bootstrap is a template repository that helps bootstrapping new Go applications quickly with a standardized setup.
+Providre-minio is a Crossplane provider for minio.
 
 [discrete]
 == Documentation

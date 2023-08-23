@@ -14,14 +14,8 @@ var (
 	commit  = "-dirty-"
 	date    = time.Now().Format("2006-01-02")
 
-	// TODO: Adjust app name
-	appName     = "go-bootstrap"
-	appLongName = "a generic bootstrapping project"
-
-	// TODO: Adjust or clear env var prefix
-	// envPrefix is the global prefix to use for the keys in environment variables.
-	// Include a delimiter like `_` if required.
-	envPrefix = "BOOTSTRAP_"
+	appName     = "provider-minio"
+	appLongName = "Crossplane provider for Minio"
 )
 
 func main() {
@@ -50,20 +44,4 @@ func newApp() *cli.App {
 		},
 	}
 	return app
-}
-
-// TODO: Remove env() and envVars() if not using an environment variable prefix.
-
-// env combines envPrefix with given suffix delimited by underscore.
-func env(suffix string) string {
-	return envPrefix + suffix
-}
-
-// envVars combines envPrefix with each given suffix delimited by underscore.
-func envVars(suffixes ...string) []string {
-	arr := make([]string, len(suffixes))
-	for i := range suffixes {
-		arr[i] = env(suffixes[i])
-	}
-	return arr
 }

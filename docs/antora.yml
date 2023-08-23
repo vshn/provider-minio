@@ -1,6 +1,5 @@
-# TODO: Adjust project meta
-name: go-bootstrap
-title: Go Bootstrap
+name: provider-minio
+title: Crossplane Provider Minio
 version: master
 start_page: ROOT:index.adoc
 nav:

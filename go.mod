@@ -1,5 +1,4 @@
-// TODO: Replace module name
-module github.com/vshn/go-bootstrap
+module github.com/vshn/provider-minio
 
 go 1.19
 

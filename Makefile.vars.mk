@@ -1,8 +1,7 @@
 ## These are some common variables for Make
 
 PROJECT_ROOT_DIR = .
-# TODO: Adjust project meta
-PROJECT_NAME ?= go-bootstrap
+PROJECT_NAME ?= provider-minio
 PROJECT_OWNER ?= vshn
 
 WORK_DIR = $(PWD)/.work
