@@ -6,6 +6,7 @@
 /provider-minio
 *.out
 /package/*.xpkg
+/package/crossplane.yaml
 
 # Docs
 /.cache/
