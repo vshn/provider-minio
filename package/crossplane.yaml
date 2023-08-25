@@ -17,7 +17,7 @@ metadata:
       [vshn/provider-minio](https://github.com/vshn/provider-minio/issues) repo.
 spec:
   controller:
-    image: ghcr.io/vshn/provider-minio:latest
+    image: ghcr.io/vshn/provider-minio/controller:latest
     permissionRequests: []
   crossplane:
     version: ">=v1.9.0"

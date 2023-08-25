@@ -49,9 +49,7 @@ $(registry_sentinel): $(KIND_KUBECONFIG)
 	@touch $@
 
 $(kind_dir)/.credentials.yaml:
-	@if [ "$$minio_API_KEY" = "" ]; then echo "Environment variable minio_API_KEY not set"; exit 1; fi
-	@if [ "$$minio_API_SECRET" = "" ]; then echo "Environment variable minio_API_SECRET not set"; exit 1; fi
-	kubectl create secret generic --from-literal minio_API_KEY=$$minio_API_KEY --from-literal minio_API_SECRET=$$minio_API_SECRET -o yaml --dry-run=client api-secret > $@
+	kubectl create secret generic --from-literal minio_API_KEY=minioadmin --from-literal minio_API_SECRET=minioadmin -o yaml --dry-run=client api-secret > $@
 
 .PHONY: provider-config
 provider-config: export KUBECONFIG = $(KIND_KUBECONFIG)

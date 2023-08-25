@@ -18,8 +18,10 @@ import (
 
 	"github.com/vshn/provider-minio/apis"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
+	providerv1 "github.com/vshn/provider-minio/apis/provider/v1"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	serializerjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
@@ -30,6 +32,7 @@ var scheme = runtime.NewScheme()
 func main() {
 	failIfError(apis.AddToScheme(scheme))
 	generateBucketSample()
+	generateProviderConfigSample()
 }
 
 func generateBucketSample() {
@@ -49,6 +52,31 @@ func newBucketSample() *miniov1.Bucket {
 				ProviderConfigReference: &xpv1.Reference{Name: "provider-config"},
 			},
 			ForProvider: miniov1.BucketParameters{},
+		},
+	}
+}
+
+func generateProviderConfigSample() {
+	spec := newProviderConfigSample()
+	serialize(spec, true)
+}
+
+func newProviderConfigSample() *providerv1.ProviderConfig {
+	return &providerv1.ProviderConfig{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: providerv1.ProviderConfigGroupVersionKind.GroupVersion().String(),
+			Kind:       providerv1.ProviderConfigKind,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "provider-config"},
+		Spec: providerv1.ProviderConfigSpec{
+			Credentials: providerv1.ProviderCredentials{
+				Source: xpv1.CredentialsSourceInjectedIdentity,
+				APISecretRef: corev1.SecretReference{
+					Name:      "api-secret",
+					Namespace: "crossplane-system",
+				},
+			},
 		},
 	}
 }

@@ -14,16 +14,20 @@ $(go_bin):
 
 ## BUILD:docker
 DOCKER_CMD ?= docker
+CONTAINER_REGISTRY ?= ghcr.io
+UPBOUND_CONTAINER_REGISTRY ?= xpkg.upbound.io
 
 IMG_TAG ?= latest
 # Image URL to use all building/pushing image targets
-CONTAINER_IMG ?= ghcr.io/$(PROJECT_OWNER)/$(PROJECT_NAME):$(IMG_TAG)
-
+CONTAINER_IMG ?= $(CONTAINER_REGISTRY)/$(PROJECT_OWNER)/$(PROJECT_NAME)/controller:$(IMG_TAG)
+LOCAL_PACKAGE_IMG = localhost:5000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IMG_TAG)
+GHCR_PACKAGE_IMG ?= $(CONTAINER_REGISTRY)/$(PROJECT_OWNER)/$(PROJECT_NAME)/provider:$(IMG_TAG)
+UPBOUND_PACKAGE_IMG ?= $(UPBOUND_CONTAINER_REGISTRY)/$(PROJECT_OWNER)/$(PROJECT_NAME):$(IMG_TAG)
 
 ## KIND:setup
 
 # https://hub.docker.com/r/kindest/node/tags
-KIND_NODE_VERSION ?= v1.24.0
+KIND_NODE_VERSION ?= v1.26.6
 KIND_IMAGE ?= docker.io/kindest/node:$(KIND_NODE_VERSION)
 KIND ?= go run sigs.k8s.io/kind
 KIND_KUBECONFIG ?= $(kind_dir)/kind-kubeconfig

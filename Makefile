@@ -12,14 +12,13 @@ MAKEFLAGS += --no-builtin-variables
 include Makefile.vars.mk
 
 # Other makefiles
+include kind/kind.mk
 include package/package.mk
 include test/local.mk
 
 # Following includes do not print warnings or error if files aren't found
 # Optional Documentation module.
 -include docs/antora-preview.mk docs/antora-build.mk
-# Optional kind module
--include kind/kind.mk
 
 golangci_bin = $(go_bin)/golangci-lint
 
