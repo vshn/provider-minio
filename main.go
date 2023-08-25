@@ -40,7 +40,7 @@ func newApp() *cli.App {
 			newLogFormatFlag(),
 		},
 		Commands: []*cli.Command{
-			newExampleCommand(),
+			newOperatorCommand(),
 		},
 	}
 	return app

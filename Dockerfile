@@ -8,6 +8,6 @@ RUN \
   tzdata
 
 ENTRYPOINT ["provider-minio"]
-COPY go-bootstrap /usr/bin/
+COPY provider-minio /usr/bin/
 
 USER 65536:0

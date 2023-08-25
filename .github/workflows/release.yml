@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - "*"
 
 jobs:
   goreleaser:
@@ -13,15 +13,32 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v4
+      - name: Determine Go version from go.mod
+        run: echo "GO_VERSION=$(go mod edit -json | jq -r .Go)" >> $GITHUB_ENV
+
+      - uses: actions/setup-go@v3
         with:
-          go-version-file: go.mod
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Login to Upbound
+        uses: docker/login-action@v1
+        with:
+          registry: xpkg.upbound.io
+          username: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR }}
+          password: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_PSW }}
 
       - name: Login to ghcr.io
         uses: docker/login-action@v2
@@ -30,9 +47,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Push package image
+        run: make package-push -e IMG_TAG=${GITHUB_REF##*/}
+
       - name: Build changelog from PRs with labels
         id: build_changelog
-        uses: mikepenz/release-changelog-builder-action@v4
+        uses: mikepenz/release-changelog-builder-action@v3
         with:
           configuration: ".github/changelog-configuration.json"
           # PreReleases still get a changelog, but the next full release gets a diff since the last full release,
@@ -44,10 +64,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish releases
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v3
         with:
           args: release --release-notes .github/release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REGISTRY: ghcr.io
-          IMAGE_NAME: ${{ github.repository }}
+          CONTAINER_REGISTRY: ghcr.io
+          IMAGE_NAME: ${{ github.repository }}/controller

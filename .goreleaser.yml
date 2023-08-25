@@ -9,7 +9,7 @@ builds:
   goos:
   - linux
   goarm:
-  - 8
+  - "8"
 
 archives:
 - format: binary

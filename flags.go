@@ -13,7 +13,7 @@ func init() {
 
 func newLogLevelFlag() *cli.IntFlag {
 	return &cli.IntFlag{
-		Name: "log-level", Aliases: []string{"v"}, EnvVars: envVars("LOG_LEVEL"),
+		Name: "log-level", Aliases: []string{"v"}, EnvVars: []string{"LOG_LEVEL"},
 		Usage: "number of the log level verbosity",
 		Value: 0,
 	}
@@ -21,7 +21,7 @@ func newLogLevelFlag() *cli.IntFlag {
 
 func newLogFormatFlag() *cli.StringFlag {
 	return &cli.StringFlag{
-		Name: "log-format", EnvVars: envVars("LOG_FORMAT"),
+		Name: "log-format", EnvVars: []string{"LOG_FORMAT"},
 		Usage: "sets the log format (values: [json, console])",
 		Value: "console",
 		Action: func(context *cli.Context, format string) error {
@@ -34,17 +34,18 @@ func newLogFormatFlag() *cli.StringFlag {
 	}
 }
 
-func newExampleFlag(dest *string) *cli.StringFlag {
-	return &cli.StringFlag{
-		Name: "flag", EnvVars: envVars("EXAMPLE_FLAG"), Required: true,
-		Usage:       "a demonstration how to configure the command",
+func newLeaderElectionEnabledFlag(dest *bool) *cli.BoolFlag {
+	return &cli.BoolFlag{
+		Name: "leader-election-enabled", Value: false, EnvVars: []string{"LEADER_ELECTION_ENABLED"},
+		Usage:       "Use leader election for the controller manager.",
 		Destination: dest,
-		Action: func(context *cli.Context, s string) error {
-			if len(s) >= 3 {
-				return nil
-			}
-			_ = cli.ShowAppHelp(context)
-			return fmt.Errorf("option needs at least 3 characters: %s", "flag")
-		},
+	}
+}
+
+func newWebhookTLSCertDirFlag(dest *string) *cli.StringFlag {
+	return &cli.StringFlag{
+		Name: "webhook-tls-cert-dir", EnvVars: []string{"WEBHOOK_TLS_CERT_DIR"}, // Env var is set by Crossplane
+		Usage:       "Directory containing the certificates for the webhook server. If empty, the webhook server is not started.",
+		Destination: dest,
 	}
 }

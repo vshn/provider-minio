@@ -5,6 +5,7 @@
 # Build
 /provider-minio
 *.out
+/package/*.xpkg
 
 # Docs
 /.cache/
