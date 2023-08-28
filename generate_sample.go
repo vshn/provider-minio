@@ -19,6 +19,7 @@ import (
 	"github.com/vshn/provider-minio/apis"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
 	providerv1 "github.com/vshn/provider-minio/apis/provider/v1"
+	"github.com/vshn/provider-minio/operator/minioutil"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -27,12 +28,15 @@ import (
 	serializerjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 )
 
-var scheme = runtime.NewScheme()
+var (
+	scheme = runtime.NewScheme()
+)
 
 func main() {
 	failIfError(apis.AddToScheme(scheme))
 	generateBucketSample()
 	generateProviderConfigSample()
+	generateSecretSample()
 }
 
 func generateBucketSample() {
@@ -51,7 +55,9 @@ func newBucketSample() *miniov1.Bucket {
 			ResourceSpec: xpv1.ResourceSpec{
 				ProviderConfigReference: &xpv1.Reference{Name: "provider-config"},
 			},
-			ForProvider: miniov1.BucketParameters{},
+			ForProvider: miniov1.BucketParameters{
+				Region: "us-east-1",
+			},
 		},
 	}
 }
@@ -70,13 +76,36 @@ func newProviderConfigSample() *providerv1.ProviderConfig {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "provider-config"},
 		Spec: providerv1.ProviderConfigSpec{
+			MinioURL: "http://minio.127.0.0.1.nip.io:8088/",
 			Credentials: providerv1.ProviderCredentials{
 				Source: xpv1.CredentialsSourceInjectedIdentity,
 				APISecretRef: corev1.SecretReference{
-					Name:      "api-secret",
+					Name:      "minio-secret",
 					Namespace: "crossplane-system",
 				},
 			},
+		},
+	}
+}
+
+func generateSecretSample() {
+	spec := newSecretSample()
+	serialize(spec, true)
+}
+
+func newSecretSample() *corev1.Secret {
+	return &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "minio-secret",
+			Namespace: "crossplane-system",
+		},
+		Data: map[string][]byte{
+			minioutil.MinioIDKey:     []byte("minioadmin"),
+			minioutil.MinioSecretKey: []byte("minioadmin"),
 		},
 	}
 }

@@ -14,6 +14,9 @@ import (
 type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
+	// +kubebuilder:validation:Required
+	// MinioURL is where the Minio instance that should be managed is located.
+	MinioURL string `json:"minioURL,omitempty"`
 }
 
 // ProviderCredentials required to authenticate.
@@ -21,7 +24,7 @@ type ProviderCredentials struct {
 	//+kubebuilder:validation:Enum=None;Secret;InjectedIdentity;Environment;Filesystem
 
 	// Source represents location of the cluster token.
-	Source xpv1.CredentialsSource `json:"source"`
+	Source xpv1.CredentialsSource `json:"source,omitempty"`
 
 	// APISecretRef is the reference to the secret with the minio API Key and Secret.
 	APISecretRef corev1.SecretReference `json:"apiSecretRef,omitempty"`

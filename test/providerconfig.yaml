@@ -9,5 +9,5 @@ spec:
       name: minio-secret
       namespace: crossplane-system
     source: InjectedIdentity
-  minioURL: http://minio.127.0.0.1.nip.io:8088/
+  minioURL: http://minio-server.minio.svc:9000/
 status: {}

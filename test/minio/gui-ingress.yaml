@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-gui
+  namespace: minio
+  labels:
+    app: minio
+spec:
+  rules:
+    - host: minio-gui.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-server-console
+                port:
+                  number: 9001
