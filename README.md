@@ -22,7 +22,6 @@ Documentation: https://vshn.github.io/provider-minio/
 * `kubectl`
 * `yq`
 * `sed` (or `gsed` for Mac)
-* [kindev](https://github.com/vshn/kindev)
 
 Some other requirements (e.g. `kind`) will be compiled on-the-fly and put in the local cache dir `.kind` as needed.
 
@@ -39,9 +38,8 @@ See all targets with `make help`
 
 ### QuickStart Demonstration
 
-1. Get an API token exoscale.com
-1. TODO: TBD
-1. `make local-install`
+1. Make sure you have a kind cluster running and the config exported
+2. `make local-install`
 
 ### Kubernetes Webhook Troubleshooting
 TODO: there are currently no webhooks configured.
@@ -85,4 +83,4 @@ If tests succeed, the relevant resources are deleted to not use up costs on the 
 
 ### Cleaning up e2e tests
 
-Simply delete the whole kindev cluster.
+`make clean`
