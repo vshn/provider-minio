@@ -15,3 +15,7 @@ nodes:
       - containerPort: 443
         hostPort: 8443
         protocol: TCP
+      # registry can't be sensibly exposed via Ingress under 127.0.0.0.nip.io host with subpath
+      - containerPort: 30500
+        hostPort: 5000
+        protocol: TCP

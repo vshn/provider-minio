@@ -1,0 +1,12 @@
+apiVersion: minio.crossplane.io/v1
+kind: ProviderConfig
+metadata:
+  creationTimestamp: null
+  name: provider-config
+spec:
+  credentials:
+    apiSecretRef:
+      name: api-secret
+      namespace: crossplane-system
+    source: InjectedIdentity
+status: {}

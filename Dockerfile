@@ -8,6 +8,7 @@ RUN \
   tzdata
 
 ENTRYPOINT ["provider-minio"]
+CMD ["operator"]
 COPY provider-minio /usr/bin/
 
 USER 65536:0
