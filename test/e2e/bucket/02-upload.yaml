@@ -1,0 +1,6 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  # note: working dir is the where the yaml files are
+  # Args: $endpoint $bucket $file_path $secret_name
+  - command: ../upload-object.sh minio.127.0.0.1.nip.io:8088 e2e-test-kuttl-provider-minio ../../../README.md minio-secret

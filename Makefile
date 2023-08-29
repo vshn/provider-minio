@@ -85,7 +85,7 @@ install-crd: generate ## Install CRDs into cluster
 .PHONY: install-samples
 install-samples: export KUBECONFIG = $(KIND_KUBECONFIG)
 install-samples: ## Install samples into cluster
-	yq ./samples/exoscale*.yaml | kubectl apply -f -
+	yq ./samples/minio*.yaml | kubectl apply -f -
 
 .PHONY: delete-samples
 delete-samples: export KUBECONFIG = $(KIND_KUBECONFIG)
@@ -135,4 +135,3 @@ webhook-debug:
 	# kubectl apply -f - && \
 	# kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io appcat-redis-validation cert-manager.io/inject-ca-from- && \
 	# kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io appcat-pg-validation kubectl.kubernetes.io/last-applied-configuration- && \
-

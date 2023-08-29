@@ -11,7 +11,7 @@ INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 local-install: export KUBECONFIG = $(KIND_KUBECONFIG)
 # for ControllerConfig:
 local-install: export INTERNAL_PACKAGE_IMG = registry.registry-system.svc.cluster.local:5000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IMG_TAG)
-local-install: kind-load-image crossplane-setup registry-setup .local-package-push  ## Install Operator in local cluster
+local-install: kind-load-image kind-setup-ingress crossplane-setup registry-setup .local-package-push minio-setup ## Install Operator in local cluster
 	yq e '.spec.metadata.annotations."local.dev/installed"="$(shell date)"' test/controllerconfig-minio.yaml | kubectl apply -f -
 	yq e '.spec.package=strenv(INTERNAL_PACKAGE_IMG)' test/provider-minio.yaml | kubectl apply -f -
 	kubectl wait --for condition=Healthy provider.pkg.crossplane.io/provider-minio --timeout 60s
@@ -55,6 +55,17 @@ $(kind_dir)/.credentials.yaml:
 provider-config: export KUBECONFIG = $(KIND_KUBECONFIG)
 provider-config: $(KIND_KUBECONFIG) $(kind_dir)/.credentials.yaml
 	kubectl apply -n crossplane-system -f $(kind_dir)/.credentials.yaml -f samples/minio.crossplane.io_providerconfig.yaml
+
+minio-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
+minio-setup: ## Install Minio Crossplane implementation
+	kubectl wait pods -n ingress-nginx -l app.kubernetes.io/component=controller --for condition=Ready --timeout=120s
+	helm repo add minio https://charts.min.io/ --force-update
+	helm upgrade --install --create-namespace --namespace minio minio --version 5.0.7 minio/minio \
+	--values test/minio/values.yaml
+	kubectl apply -f test/minio/gui-ingress.yaml
+	@echo -e "***\n*** Installed minio in http://minio.127.0.0.1.nip.io:8088\n***"
+	@echo -e "***\n*** use with mc:\n mc alias set localnip http://minio.127.0.0.1.nip.io:8088 minioadmin minioadmin\n***"
+	@echo -e "***\n*** console access http://minio-gui.127.0.0.1.nip.io:8088\n***"
 
 ###
 ### Integration Tests
@@ -127,7 +138,9 @@ $(mc_bin): | $(go_bin)
 	go install github.com/minio/mc@latest
 
 test-e2e: export KUBECONFIG = $(KIND_KUBECONFIG)
-test-e2e: $(kuttl_bin) $(mc_bin) local-install provider-config ## E2E tests
+test-e2e: $(kuttl_bin) $(mc_bin) local-install provider-config install-crd ## E2E tests
+	kubectl apply -f test/providerconfig.yaml
+	kubectl apply -f test/secret.yaml
 	GOBIN=$(go_bin) $(kuttl_bin) test ./test/e2e --config ./test/e2e/kuttl-test.yaml --suppress-log=Events
 	@rm -f kubeconfig
 # kuttl leaves kubeconfig garbage: https://github.com/kudobuilder/kuttl/issues/297

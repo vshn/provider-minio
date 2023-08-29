@@ -2,8 +2,6 @@ name: E2E
 
 on:
   push:
-    branches:
-      - master
     paths-ignore:
       - docs/**
   # schedule:
@@ -34,9 +32,6 @@ jobs:
 
       - name: Run tests
         run: make test-e2e
-        env:
-          EXOSCALE_API_KEY: ${{ secrets.EXOSCALE_API_KEY }}
-          EXOSCALE_API_SECRET: ${{ secrets.EXOSCALE_API_SECRET }}
 
       - name: Cleanup
         run: make clean

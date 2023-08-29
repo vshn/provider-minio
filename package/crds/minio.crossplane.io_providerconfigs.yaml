@@ -106,9 +106,11 @@ spec:
                     - Environment
                     - Filesystem
                     type: string
-                required:
-                - source
                 type: object
+              minioURL:
+                description: MinioURL is where the Minio instance that should be managed
+                  is located.
+                type: string
             required:
             - credentials
             type: object

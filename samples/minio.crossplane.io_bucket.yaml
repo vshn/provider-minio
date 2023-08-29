@@ -4,7 +4,8 @@ metadata:
   creationTimestamp: null
   name: bucket-local-dev
 spec:
-  forProvider: {}
+  forProvider:
+    region: us-east-1
   providerConfigRef:
     name: provider-config
 status:

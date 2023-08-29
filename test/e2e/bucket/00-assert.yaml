@@ -1,0 +1,27 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+---
+apiVersion: minio.crossplane.io/v1
+kind: Bucket
+metadata:
+  name: e2e-test-bucket
+  annotations:
+    minio.crossplane.io/lock: claimed
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    bucketName: e2e-test-kuttl-provider-minio
+    bucketDeletionPolicy: DeleteAll
+    region: us-east-1
+  providerConfigRef:
+    name: provider-config
+status:
+  atProvider:
+    bucketName: e2e-test-kuttl-provider-minio
+  conditions:
+    - status: 'True'
+    - status: 'True'
+  endpoint: minio-server.minio.svc:9000
+  endpointURL: http://minio-server.minio.svc:9000/
+---
