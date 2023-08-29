@@ -37,6 +37,7 @@ func main() {
 	generateBucketSample()
 	generateProviderConfigSample()
 	generateSecretSample()
+	generateUserSample()
 }
 
 func generateBucketSample() {
@@ -106,6 +107,32 @@ func newSecretSample() *corev1.Secret {
 		Data: map[string][]byte{
 			minioutil.MinioIDKey:     []byte("minioadmin"),
 			minioutil.MinioSecretKey: []byte("minioadmin"),
+		},
+	}
+}
+
+func generateUserSample() {
+	spec := newUserSample()
+	serialize(spec, true)
+}
+
+func newUserSample() *miniov1.User {
+	return &miniov1.User{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: miniov1.UserGroupVersionKind.GroupVersion().String(),
+			Kind:       miniov1.UserKind,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "devuser",
+		},
+		Spec: miniov1.UserSpec{
+			ResourceSpec: xpv1.ResourceSpec{
+				ProviderConfigReference: &xpv1.Reference{Name: "provider-config"},
+				WriteConnectionSecretToReference: &xpv1.SecretReference{
+					Name:      "devuser",
+					Namespace: "default",
+				},
+			},
 		},
 	}
 }

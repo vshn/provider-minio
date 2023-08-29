@@ -1,0 +1,14 @@
+apiVersion: minio.crossplane.io/v1
+kind: User
+metadata:
+  creationTimestamp: null
+  name: devuser
+spec:
+  forProvider: {}
+  providerConfigRef:
+    name: provider-config
+  writeConnectionSecretToRef:
+    name: devuser
+    namespace: default
+status:
+  atProvider: {}

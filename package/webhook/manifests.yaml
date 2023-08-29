@@ -24,3 +24,23 @@ webhooks:
     resources:
     - buckets
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-minio-crossplane-io-v1-user
+  failurePolicy: Fail
+  name: users.minio.crossplane.io
+  rules:
+  - apiGroups:
+    - minio.crossplane.io
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - users
+  sideEffects: None

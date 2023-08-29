@@ -125,13 +125,12 @@ webhook_service_name = host.docker.internal
 
 webhook-debug: $(webhook_cert) ## Creates certificates, patches the webhook registrations and applies everything to the given kube cluster
 webhook-debug:
-	#
-	# kubectl -n syn-appcat scale deployment appcat-controller --replicas 0
-	# cabundle=$$(cat .work/webhook/tls.crt | base64) && \
-	# HOSTIP=$(webhook_service_name) && \
-	# kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io appcat-pg-validation cert-manager.io/inject-ca-from- && \
-	# kubectl get validatingwebhookconfigurations.admissionregistration.k8s.io appcat-pg-validation -oyaml | \
-	# yq e "del(.webhooks[0].clientConfig.service) | .webhooks[0].clientConfig.caBundle |= \"$$cabundle\" | .webhooks[0].clientConfig.url |= \"https://$$HOSTIP:9443/validate-vshn-appcat-vshn-io-v1-vshnpostgresql\"" - | \
-	# kubectl apply -f - && \
-	# kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io appcat-redis-validation cert-manager.io/inject-ca-from- && \
-	# kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io appcat-pg-validation kubectl.kubernetes.io/last-applied-configuration- && \
+	kubectl apply -f package/webhook
+	cabundle=$$(cat .work/webhook/tls.crt | base64) && \
+	HOSTIP=$(webhook_service_name) && \
+	kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io validating-webhook-configuration cert-manager.io/inject-ca-from- && \
+	kubectl get validatingwebhookconfigurations.admissionregistration.k8s.io validating-webhook-configuration -oyaml | \
+	yq e "del(.webhooks[0].clientConfig.service) | .webhooks[0].clientConfig.caBundle |= \"$$cabundle\" | .webhooks[0].clientConfig.url |= \"https://$$HOSTIP:9443//validate-minio-crossplane-io-v1-bucket\"" - | \
+	yq e "del(.webhooks[1].clientConfig.service) | .webhooks[1].clientConfig.caBundle |= \"$$cabundle\" | .webhooks[1].clientConfig.url |= \"https://$$HOSTIP:9443//validate-minio-crossplane-io-v1-user\"" - | \
+	kubectl apply -f - && \
+	kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io validating-webhook-configuration kubectl.kubernetes.io/last-applied-configuration-

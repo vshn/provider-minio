@@ -1,0 +1,30 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+---
+apiVersion: minio.crossplane.io/v1
+kind: User
+metadata:
+  name: testuser
+spec:
+  forProvider: {}
+  providerConfigRef:
+    name: provider-config
+  writeConnectionSecretToRef:
+    name: testuser
+    namespace: default
+status:
+  atProvider:
+    userName: testuser
+    status: enabled
+  conditions:
+    - status: 'True'
+    - status: 'True'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: testuser
+  namespace: default
+type: connection.crossplane.io/v1alpha1
+---
