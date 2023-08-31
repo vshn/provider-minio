@@ -2,6 +2,7 @@ package operator
 
 import (
 	"github.com/vshn/provider-minio/operator/bucket"
+	"github.com/vshn/provider-minio/operator/policy"
 	"github.com/vshn/provider-minio/operator/user"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -11,6 +12,7 @@ func SetupControllers(mgr ctrl.Manager) error {
 	for _, setup := range []func(ctrl.Manager) error{
 		bucket.SetupController,
 		user.SetupController,
+		policy.SetupController,
 	} {
 		if err := setup(mgr); err != nil {
 			return err
@@ -24,6 +26,7 @@ func SetupWebhooks(mgr ctrl.Manager) error {
 	for _, setup := range []func(ctrl.Manager) error{
 		bucket.SetupWebhook,
 		user.SetupWebhook,
+		policy.SetupWebhook,
 	} {
 		if err := setup(mgr); err != nil {
 			return err

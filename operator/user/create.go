@@ -7,6 +7,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
+	"github.com/minio/madmin-go/v3"
 	"github.com/sethvargo/go-password/password"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,7 +29,7 @@ func (u *userClient) Create(ctx context.Context, mg resource.Managed) (managed.E
 		return managed.ExternalCreation{}, errNotUser
 	}
 
-	secretKey, err := password.Generate(64, 5, 5, false, true)
+	secretKey, err := password.Generate(64, 5, 0, false, true)
 	if err != nil {
 		return managed.ExternalCreation{}, err
 	}
@@ -43,6 +44,11 @@ func (u *userClient) Create(ctx context.Context, mg resource.Managed) (managed.E
 	}
 
 	err = u.ma.AddUser(ctx, user.GetUserName(), secretKey)
+	if err != nil {
+		return managed.ExternalCreation{}, err
+	}
+
+	err = u.setUserPolicies(ctx, user.GetUserName(), user.Spec.ForProvider.Policies)
 	if err != nil {
 		return managed.ExternalCreation{}, err
 	}
@@ -77,4 +83,20 @@ func (u *userClient) emitCreationEvent(user *miniov1.User) {
 		Reason:  "Created",
 		Message: "User successfully created",
 	})
+}
+
+func (u *userClient) setUserPolicies(ctx context.Context, userName string, policies []string) error {
+
+	if len(policies) == 0 {
+		return nil
+	}
+
+	req := madmin.PolicyAssociationReq{
+		Policies: policies,
+		User:     userName,
+	}
+
+	_, err := u.ma.AttachPolicy(ctx, req)
+
+	return err
 }

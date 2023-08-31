@@ -1,0 +1,12 @@
+apiVersion: minio.crossplane.io/v1
+kind: Policy
+metadata:
+  creationTimestamp: null
+  name: mypolicy
+spec:
+  forProvider:
+    allowBucket: bucket-local-dev
+  providerConfigRef:
+    name: provider-config
+status:
+  atProvider: {}

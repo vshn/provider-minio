@@ -1,0 +1,19 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+---
+apiVersion: minio.crossplane.io/v1
+kind: User
+metadata:
+  name: testuser
+spec:
+  forProvider:
+    policies:
+      - e2e-test-update
+status:
+  atProvider:
+    userName: testuser
+    status: enabled
+  conditions:
+    - status: 'True'
+    - status: 'True'

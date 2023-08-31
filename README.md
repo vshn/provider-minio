@@ -48,12 +48,14 @@ To test and troubleshoot the webhooks on the cluster, simply apply your changes 
 
 1.  Make sure you have all CRDs and validation webhook registrations installed.
     ```bash
-    make install-samples
+    make install-crd
+    kubectl apply -f package/webhook
     ```
 2.  To debug the webhook in an IDE, we need to generate certificates:
     ```bash
     make webhook-debug
     # if necessary with another endpoint name, depending on your docker setup
+    # if you change the webhook_service_name variable, you need to clean out the old certificates
     make webhook-debug -e webhook_service_name=$HOSTIP
     ```
 3.  Start the operator in your IDE with `WEBHOOK_TLS_CERT_DIR` environment set to `.work/webhooks`.
@@ -62,6 +64,13 @@ To test and troubleshoot the webhooks on the cluster, simply apply your changes 
     ```bash
     make install-samples
     ```
+
+### Run operator in debugger
+
+* `make crossplane-setup minio-setup install-crds` to install crossplane and minio in the kind cluster
+* `kubectl apply -f samples/_secret.yaml samples/minio.crossplane.io_providerconfig.yaml`
+* `EXPORT KUBECONFIG=.work/kind/kind-kubeconfig`
+* `go run . --log-level 1 operator`
 
 ### Crossplane Provider Mechanics
 

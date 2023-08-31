@@ -3,4 +3,4 @@ kind: TestStep
 commands:
   # note: working dir is the where the yaml files are
   # Args: $endpoint $bucket $file_path $secret_name $secret_namespace
-  - command: ../upload-object.sh minio.127.0.0.1.nip.io:8088 e2e-test-kuttl-provider-minio ../../../README.md minio-secret crossplane-system
+  - command: ../upload-object.sh minio.127.0.0.1.nip.io:8088 e2e-test-kuttl-provider-minio-policy ../../../README.md testuser-policy default

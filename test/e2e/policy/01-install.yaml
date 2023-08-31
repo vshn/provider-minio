@@ -1,0 +1,16 @@
+---
+apiVersion: minio.crossplane.io/v1
+kind: User
+metadata:
+  name: testuser-policy
+spec:
+  forProvider:
+    policies:
+      - e2e-test-policy
+  providerConfigRef:
+    name: provider-config
+  writeConnectionSecretToRef:
+    name: testuser-policy
+    namespace: default
+
+---

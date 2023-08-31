@@ -20,7 +20,7 @@ func SetupController(mgr ctrl.Manager) error {
 	return SetupControllerWithConnecter(mgr, name, recorder, &connector{
 		kube:     mgr.GetClient(),
 		recorder: recorder,
-	}, 30*time.Second)
+	}, 0*time.Second)
 }
 
 func SetupControllerWithConnecter(mgr ctrl.Manager, name string, recorder event.Recorder, c managed.ExternalConnecter, creationGracePeriod time.Duration) error {

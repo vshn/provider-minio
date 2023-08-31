@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"reflect"
+	"strings"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
@@ -40,14 +42,35 @@ func (u *userClient) Observe(ctx context.Context, mg resource.Managed) (managed.
 		// The user doesn't exist!
 		// Let's try again.
 		user.Status.AtProvider.UserName = ""
-		return managed.ExternalObservation{}, nil
+		return managed.ExternalObservation{ResourceExists: false}, nil
+	}
+
+	if !u.equalPolicies(minioUser, user) {
+		user.SetConditions(miniov1.Updating())
+		return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: false}, nil
 	}
 
 	user.Status.AtProvider.Status = string(minioUser.Status)
+	user.Status.AtProvider.Policies = minioUser.PolicyName
 
 	if minioUser.Status == madmin.AccountEnabled {
 		user.SetConditions(xpv1.Available())
+	} else {
+		user.SetConditions(miniov1.Disabled())
 	}
 
 	return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true}, nil
+}
+
+func (u *userClient) equalPolicies(minioUser madmin.UserInfo, user *miniov1.User) bool {
+	// policyName contains a string with all applied policies seperated by comma
+	minioPolicies := strings.Split(minioUser.PolicyName, ",")
+
+	// if policyName is an empty string, then string.Split() will create an array with just one empty string
+	// to make it comparable we need to catch this case and set it to an empty array
+	if minioPolicies[0] == "" {
+		minioPolicies = nil
+	}
+
+	return reflect.DeepEqual(minioPolicies, user.Spec.ForProvider.Policies)
 }

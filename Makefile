@@ -85,6 +85,7 @@ install-crd: generate ## Install CRDs into cluster
 .PHONY: install-samples
 install-samples: export KUBECONFIG = $(KIND_KUBECONFIG)
 install-samples: ## Install samples into cluster
+	kubectl apply -f ./samples/_secret.yaml
 	yq ./samples/minio*.yaml | kubectl apply -f -
 
 .PHONY: delete-samples
@@ -131,6 +132,7 @@ webhook-debug:
 	kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io validating-webhook-configuration cert-manager.io/inject-ca-from- && \
 	kubectl get validatingwebhookconfigurations.admissionregistration.k8s.io validating-webhook-configuration -oyaml | \
 	yq e "del(.webhooks[0].clientConfig.service) | .webhooks[0].clientConfig.caBundle |= \"$$cabundle\" | .webhooks[0].clientConfig.url |= \"https://$$HOSTIP:9443//validate-minio-crossplane-io-v1-bucket\"" - | \
-	yq e "del(.webhooks[1].clientConfig.service) | .webhooks[1].clientConfig.caBundle |= \"$$cabundle\" | .webhooks[1].clientConfig.url |= \"https://$$HOSTIP:9443//validate-minio-crossplane-io-v1-user\"" - | \
+	yq e "del(.webhooks[1].clientConfig.service) | .webhooks[1].clientConfig.caBundle |= \"$$cabundle\" | .webhooks[1].clientConfig.url |= \"https://$$HOSTIP:9443//validate-minio-crossplane-io-v1-policy\"" - | \
+	yq e "del(.webhooks[2].clientConfig.service) | .webhooks[2].clientConfig.caBundle |= \"$$cabundle\" | .webhooks[2].clientConfig.url |= \"https://$$HOSTIP:9443//validate-minio-crossplane-io-v1-user\"" - | \
 	kubectl apply -f - && \
 	kubectl annotate validatingwebhookconfigurations.admissionregistration.k8s.io validating-webhook-configuration kubectl.kubernetes.io/last-applied-configuration-

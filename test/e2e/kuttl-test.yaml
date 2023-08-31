@@ -3,4 +3,4 @@ kind: TestSuite
 testDirs:
   - ./test/e2e/
 namespace: default
-timeout: 60
+timeout: 90

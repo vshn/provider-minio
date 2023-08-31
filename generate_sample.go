@@ -38,6 +38,7 @@ func main() {
 	generateProviderConfigSample()
 	generateSecretSample()
 	generateUserSample()
+	generatePolicySample()
 }
 
 func generateBucketSample() {
@@ -132,6 +133,31 @@ func newUserSample() *miniov1.User {
 					Name:      "devuser",
 					Namespace: "default",
 				},
+			},
+		},
+	}
+}
+
+func generatePolicySample() {
+	spec := newPolicySample()
+	serialize(spec, true)
+}
+
+func newPolicySample() *miniov1.Policy {
+	return &miniov1.Policy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: miniov1.PolicyGroupVersionKind.GroupVersion().String(),
+			Kind:       miniov1.PolicyKind,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "mypolicy",
+		},
+		Spec: miniov1.PolicySpec{
+			ResourceSpec: xpv1.ResourceSpec{
+				ProviderConfigReference: &xpv1.Reference{Name: "provider-config"},
+			},
+			ForProvider: miniov1.PolicyParameters{
+				AllowBucket: "bucket-local-dev",
 			},
 		},
 	}

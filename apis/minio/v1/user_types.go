@@ -16,6 +16,7 @@ func init() {
 // +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="Synced",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="External Name",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
+// +kubebuilder:printcolumn:name="Policies",type="string",JSONPath=".status.atProvider.policies"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,minio}
@@ -44,6 +45,9 @@ type UserProviderStatus struct {
 	UserName string `json:"userName,omitempty"`
 	// Status indicates the user's status on the minio instance.
 	Status string `json:"status,omitempty"`
+
+	// Policies contains a list of policies that are applied to this user
+	Policies string `json:"policies,omitempty"`
 }
 
 type UserParameters struct {
@@ -51,6 +55,10 @@ type UserParameters struct {
 	// Defaults to `metadata.name` if unset.
 	// Cannot be changed after user is created.
 	UserName string `json:"userName,omitempty"`
+
+	// Policies contains a list of policies that should get assigned to this user.
+	// These policies need to be created seperately by using the policy CRD.
+	Policies []string `json:"policies,omitempty"`
 }
 
 // +kubebuilder:object:root=true
