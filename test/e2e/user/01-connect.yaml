@@ -1,0 +1,7 @@
+# This test is currently not viable, as a user without any policy can't do anything at all.
+# apiVersion: kuttl.dev/v1beta1
+# kind: TestStep
+# commands:
+#   # note: working dir is the where the yaml files are
+#   # Args: $endpoint $secret_name
+#   - command: ../connect.sh minio.127.0.0.1.nip.io:8088 testuser

@@ -8,6 +8,7 @@
 /package/*.xpkg
 /package/crossplane.yaml
 /kubeconfig
+__debug*
 
 # Docs
 /.cache/

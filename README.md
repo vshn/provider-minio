@@ -42,8 +42,6 @@ See all targets with `make help`
 2. `make local-install`
 
 ### Kubernetes Webhook Troubleshooting
-TODO: there are currently no webhooks configured.
-
 The provider comes with mutating and validation admission webhook server.
 
 To test and troubleshoot the webhooks on the cluster, simply apply your changes with `kubectl`.
@@ -78,8 +76,6 @@ To execute tests, run `make test-e2e` from the root dir.
 
 If a test fails, kuttl leaves the resources in the kind-cluster intact, so you can inspect the resources and events if necessary.
 Please note that Kubernetes Events from cluster-scoped resources appear in the `default` namespace only, but `kubectl describe ...` should show you the events.
-
-If tests succeed, the relevant resources are deleted to not use up costs on the cloud providers.
 
 ### Cleaning up e2e tests
 
