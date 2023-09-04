@@ -27,11 +27,12 @@ type cannedPolicyLister interface {
 
 // Validator validates admission requests.
 type Validator struct {
-	log logr.Logger
+	log  logr.Logger
+	kube client.Client
 }
 
 // ValidateCreate implements admission.CustomValidator.
-func (v *Validator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *Validator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	v.log.V(1).Info("Validate create")
 
 	user, ok := obj.(*miniov1.User)
@@ -42,6 +43,11 @@ func (v *Validator) ValidateCreate(_ context.Context, obj runtime.Object) (admis
 	providerConfigRef := user.Spec.ProviderConfigReference
 	if providerConfigRef == nil || providerConfigRef.Name == "" {
 		return nil, field.Invalid(field.NewPath("spec", "providerConfigRef", "name"), "null", "Provider config is required")
+	}
+
+	err := v.doesPolicyExist(ctx, user)
+	if err != nil {
+		return nil, field.Invalid(field.NewPath("spec", "forProvider", "policies"), user.Spec.ForProvider.Policies, err.Error())
 	}
 
 	return nil, nil

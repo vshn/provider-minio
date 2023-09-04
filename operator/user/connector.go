@@ -22,6 +22,7 @@ var (
 type connector struct {
 	kube     client.Client
 	recorder event.Recorder
+	usage    resource.Tracker
 }
 
 type userClient struct {
@@ -32,6 +33,11 @@ type userClient struct {
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
 	log := ctrl.LoggerFrom(ctx)
 	log.V(1).Info("connecting resource")
+
+	err := c.usage.Track(ctx, mg)
+	if err != nil {
+		return nil, err
+	}
 
 	user, ok := mg.(*miniov1.User)
 	if !ok {

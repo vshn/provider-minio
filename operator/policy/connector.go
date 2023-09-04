@@ -22,6 +22,7 @@ var (
 type connector struct {
 	kube     client.Client
 	recorder event.Recorder
+	usage    resource.Tracker
 }
 
 type policyClient struct {
@@ -32,6 +33,11 @@ type policyClient struct {
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
 	log := ctrl.LoggerFrom(ctx)
 	log.V(1).Info("connecting resource")
+
+	err := c.usage.Track(ctx, mg)
+	if err != nil {
+		return nil, err
+	}
 
 	policy, ok := mg.(*miniov1.Policy)
 	if !ok {
@@ -56,8 +62,8 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	return uc, nil
 }
 
-func (c *connector) getProviderConfig(ctx context.Context, Policy *miniov1.Policy) (*providerv1.ProviderConfig, error) {
-	configName := Policy.GetProviderConfigReference().Name
+func (c *connector) getProviderConfig(ctx context.Context, policy *miniov1.Policy) (*providerv1.ProviderConfig, error) {
+	configName := policy.GetProviderConfigReference().Name
 	config := &providerv1.ProviderConfig{}
 	err := c.kube.Get(ctx, client.ObjectKey{Name: configName}, config)
 	return config, err
