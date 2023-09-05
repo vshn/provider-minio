@@ -1,0 +1,54 @@
+= Installation
+
+This tutorial goes through the steps required to get the operator up and running.
+
+== Prerequisites
+
+* `kubectl`
+* A running Kubernetes cluster with cluster-admin permissions
+
+== Steps
+
+. Install Crossplane chart
++
+[source,bash,subs="attributes+"]
+----
+helm repo add crossplane https://charts.crossplane.io/stable
+helm upgrade --install crossplane crossplane/crossplane \
+  --create-namespace \
+  --namespace crossplane-system \
+  --set "args[1]='--enable-composition-revisions'" \
+  --set webhooks.enabled=true \
+  --wait
+----
+
+. Install Minio Chart
++
+[source,bash,subs="attributes+"]
+----
+helm repo add minio https://charts.min.io/ --force-update
+helm upgrade --install --create-namespace --namespace minio minio --version 5.0.7 minio/minio \
+	--values values.yaml <1>
+----
+<1> Please provide a values.yaml file that fits your purpose
+
+. Install `provider-minio`
++
+[source,yaml,subs="attributes+"]
+----
+kubectl apply -f - <<EOF
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  labels:
+    name: provider-minio
+  name: provider-minio
+spec:
+  package: ghcr.io/vshn/provider-minio/package:latest
+EOF
+----
+
+== Conclusion
+
+Now that you have the basic Provider running, it's time to get started with deploying resources.
+See xref:tutorials/getting-started.adoc[Tutorial: Getting Started] to get started.

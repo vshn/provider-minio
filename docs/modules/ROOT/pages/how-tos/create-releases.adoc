@@ -1,0 +1,28 @@
+= Create Releases
+
+This repository contains GitHub releases.
+
+[TIP]
+====
+The PR template reminds you how to separate and label PRs.
+====
+
+== Provider Release
+
+Releasing a new version of the operator requires pushing a **new Git tag**, following the SemVer schema with a **`v` prefix**.
+Optionally, for prereleases they may contain a ascending release candidate suffix with `-rc#`.
+
+.Possible Operator Git tags
+[example]
+====
+- `v0.1.2`
+- `v1.4.0`
+- `v2.0.0-rc1`
+- `v2.0.0-rc2`
+====
+
+The changelog will be automatically created and is based on merged PRs.
+The following labels must exist on a PR to be included in the changelog:
+
+- `area:operator`
+- one of [`bug`, `enhancement`, `documentation`, `change`, `breaking`, `dependency`]
