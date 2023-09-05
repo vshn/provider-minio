@@ -27,4 +27,4 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Run build
-        run: make build
+        run: make build -e IMG_TAG=${GITHUB_REF##*/}
