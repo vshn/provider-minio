@@ -4,17 +4,17 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.12.1
-  name: users.minio.crossplane.io
+  name: policies.minio.crossplane.io
 spec:
   group: minio.crossplane.io
   names:
     categories:
     - crossplane
     - minio
-    kind: User
-    listKind: UserList
-    plural: users
-    singular: user
+    kind: Policy
+    listKind: PolicyList
+    plural: policies
+    singular: policy
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -26,9 +26,6 @@ spec:
       type: string
     - jsonPath: .metadata.annotations.crossplane\.io/external-name
       name: External Name
-      type: string
-    - jsonPath: .status.atProvider.policies
-      name: Policies
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -66,17 +63,14 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  policies:
-                    description: Policies contains a list of policies that should
-                      get assigned to this user. These policies need to be created
-                      seperately by using the policy CRD.
-                    items:
-                      type: string
-                    type: array
-                  userName:
-                    description: UserName is the name of the user to create. Defaults
-                      to `metadata.name` if unset. Cannot be changed after user is
-                      created.
+                  allowBucket:
+                    description: AllowBucket will create a simple policy that allows
+                      all operations for the given bucket. Mutually exclusive to `RawPolicy`.
+                    type: string
+                  rawPolicy:
+                    description: RawPolicy describes a raw S3 policy ad verbatim.
+                      Please consult https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html
+                      for more details about the policy. Mutually exclusive to `AllowBucket`.
                     type: string
                 type: object
               managementPolicies:
@@ -278,16 +272,9 @@ spec:
             properties:
               atProvider:
                 properties:
-                  policies:
-                    description: Policies contains a list of policies that are applied
-                      to this user
-                    type: string
-                  status:
-                    description: Status indicates the user's status on the minio instance.
-                    type: string
-                  userName:
-                    description: UserName is populated it the user actually exists
-                      in minio during observe.
+                  policy:
+                    description: Policy contains the rendered policy in JSON format
+                      as it's applied on minio.
                     type: string
                 type: object
               conditions:

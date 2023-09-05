@@ -13,5 +13,16 @@ spec:
     namespace: default
 status:
   atProvider: {}
-
 ---
+apiVersion: minio.crossplane.io/v1
+kind: Policy
+metadata:
+  creationTimestamp: null
+  name: e2e-test-update
+spec:
+  forProvider:
+    allowBucket: e2e-test-kuttl-provider
+  providerConfigRef:
+    name: provider-config
+status:
+  atProvider: {}

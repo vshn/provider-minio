@@ -9,6 +9,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
+	providerv1 "github.com/vshn/provider-minio/apis/provider/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -20,7 +21,8 @@ func SetupController(mgr ctrl.Manager) error {
 	return SetupControllerWithConnecter(mgr, name, recorder, &connector{
 		kube:     mgr.GetClient(),
 		recorder: recorder,
-	}, 30*time.Second)
+		usage:    resource.NewProviderConfigUsageTracker(mgr.GetClient(), &providerv1.ProviderConfigUsage{}),
+	}, 0*time.Second)
 }
 
 func SetupControllerWithConnecter(mgr ctrl.Manager, name string, recorder event.Recorder, c managed.ExternalConnecter, creationGracePeriod time.Duration) error {
@@ -50,7 +52,8 @@ func SetupWebhook(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(&miniov1.User{}).
 		WithValidator(&Validator{
-			log: mgr.GetLogger().WithName("webhook").WithName(strings.ToLower(miniov1.UserKind)),
+			log:  mgr.GetLogger().WithName("webhook").WithName(strings.ToLower(miniov1.UserKind)),
+			kube: mgr.GetClient(),
 		}).
 		Complete()
 }

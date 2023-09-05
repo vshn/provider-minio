@@ -1,0 +1,7 @@
+apiVersion: minio.crossplane.io/v1
+kind: Policy
+metadata:
+  name: e2e-test-policy
+spec:
+  forProvider:
+    allowBucket: another

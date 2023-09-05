@@ -1,0 +1,17 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+---
+apiVersion: minio.crossplane.io/v1
+kind: Policy
+metadata:
+  name: e2e-test-policy
+spec:
+  forProvider:
+    allowBucket: another
+  providerConfigRef:
+    name: provider-config
+status:
+  atProvider:
+    policy: '{"Version":"2012-10-17","Statement":[{"Sid":"addPerm","Effect":"Allow","Action":["s3:*"],"Resource":["arn:aws:s3:::another/","arn:aws:s3:::another/*"]}]}'
+---

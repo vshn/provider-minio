@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
@@ -25,6 +26,7 @@ func (u *userClient) Delete(ctx context.Context, mg resource.Managed) error {
 	}
 
 	u.emitDeletionEvent(user)
+	user.SetConditions(xpv1.Deleting())
 	return nil
 }
 

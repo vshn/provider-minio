@@ -1,0 +1,9 @@
+---
+apiVersion: minio.crossplane.io/v1
+kind: User
+metadata:
+  name: testuser
+spec:
+  forProvider:
+    policies:
+      - e2e-test-update

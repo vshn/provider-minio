@@ -11,7 +11,7 @@ INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 local-install: export KUBECONFIG = $(KIND_KUBECONFIG)
 # for ControllerConfig:
 local-install: export INTERNAL_PACKAGE_IMG = registry.registry-system.svc.cluster.local:5000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IMG_TAG)
-local-install: kind-load-image kind-setup-ingress crossplane-setup registry-setup .local-package-push minio-setup ## Install Operator in local cluster
+local-install: kind-load-image crossplane-setup registry-setup .local-package-push minio-setup ## Install Operator in local cluster
 	yq e '.spec.metadata.annotations."local.dev/installed"="$(shell date)"' test/controllerconfig-minio.yaml | kubectl apply -f -
 	yq e '.spec.package=strenv(INTERNAL_PACKAGE_IMG)' test/provider-minio.yaml | kubectl apply -f -
 	kubectl wait --for condition=Healthy provider.pkg.crossplane.io/provider-minio --timeout 60s
@@ -57,7 +57,7 @@ provider-config: $(KIND_KUBECONFIG) $(kind_dir)/.credentials.yaml
 	kubectl apply -n crossplane-system -f $(kind_dir)/.credentials.yaml -f samples/minio.crossplane.io_providerconfig.yaml
 
 minio-setup: export KUBECONFIG = $(KIND_KUBECONFIG)
-minio-setup: ## Install Minio Crossplane implementation
+minio-setup: kind-setup-ingress ## Install Minio Crossplane implementation
 	kubectl wait pods -n ingress-nginx -l app.kubernetes.io/component=controller --for condition=Ready --timeout=120s
 	helm repo add minio https://charts.min.io/ --force-update
 	helm upgrade --install --create-namespace --namespace minio minio --version 5.0.7 minio/minio \
@@ -139,6 +139,9 @@ $(mc_bin): | $(go_bin)
 
 test-e2e: export KUBECONFIG = $(KIND_KUBECONFIG)
 test-e2e: $(kuttl_bin) $(mc_bin) local-install provider-config install-crd ## E2E tests
+	# let's give the provider some time to properly start.
+	# Especially the webhooks can take a bit longer to be ready and then cause the whole run to fail
+	sleep 5
 	kubectl apply -f test/providerconfig.yaml
 	kubectl apply -f test/secret.yaml
 	GOBIN=$(go_bin) $(kuttl_bin) test ./test/e2e --config ./test/e2e/kuttl-test.yaml --suppress-log=Events
@@ -147,6 +150,8 @@ test-e2e: $(kuttl_bin) $(mc_bin) local-install provider-config install-crd ## E2
 
 run-single-e2e: export KUBECONFIG = $(KIND_KUBECONFIG)
 run-single-e2e: $(kuttl_bin) $(mc_bin) local-install provider-config ## Run specific e2e test with `run-single-e2e test=$name`
+	kubectl apply -f test/providerconfig.yaml
+	kubectl apply -f test/secret.yaml
 	GOBIN=$(go_bin) $(kuttl_bin) test ./test/e2e --config ./test/e2e/kuttl-test.yaml --suppress-log=Events --test $(test)
 	@rm -f kubeconfig
 
@@ -155,12 +160,8 @@ run-single-e2e: $(kuttl_bin) $(mc_bin) local-install provider-config ## Run spec
 .e2e-test-clean:
 	@if [ -f $(KIND_KUBECONFIG) ]; then \
 		kubectl delete buckets --all; \
-		kubectl delete iamkeys --all; \
-		kubectl delete postgresql --all; \
-		kubectl delete mysql --all; \
-		kubectl delete redis --all; \
-		kubectl delete kafka --all; \
-		kubectl delete opensearch --all; \
+		kubectl delete users --all; \
+		kubectl delete policies --all; \
 	else \
 		echo "no kubeconfig found"; \
 	fi

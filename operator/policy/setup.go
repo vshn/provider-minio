@@ -1,4 +1,4 @@
-package bucket
+package policy
 
 import (
 	"strings"
@@ -30,7 +30,7 @@ func SetupControllerWithConnecter(mgr ctrl.Manager, name string, recorder event.
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&miniov1.Bucket{}).
+		For(&miniov1.Policy{}).
 		Complete(r)
 }
 
@@ -38,7 +38,7 @@ func createReconciler(mgr ctrl.Manager, name string, recorder event.Recorder, c 
 	cps := []managed.ConnectionPublisher{managed.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme())}
 
 	return managed.NewReconciler(mgr,
-		resource.ManagedKind(miniov1.BucketGroupVersionKind),
+		resource.ManagedKind(miniov1.PolicyGroupVersionKind),
 		managed.WithExternalConnecter(c),
 		managed.WithLogger(logging.NewLogrLogger(mgr.GetLogger().WithValues("controller", name))),
 		managed.WithRecorder(recorder),
@@ -50,9 +50,9 @@ func createReconciler(mgr ctrl.Manager, name string, recorder event.Recorder, c 
 // SetupWebhook adds a webhook for managed resources.
 func SetupWebhook(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(&miniov1.Bucket{}).
+		For(&miniov1.Policy{}).
 		WithValidator(&Validator{
-			log: mgr.GetLogger().WithName("webhook").WithName(strings.ToLower(miniov1.BucketKind)),
+			log: mgr.GetLogger().WithName("webhook").WithName(strings.ToLower(miniov1.PolicyKind)),
 		}).
 		Complete()
 }

@@ -1,4 +1,4 @@
-package user
+package policy
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	errNotUser = fmt.Errorf("managed resource is not a user")
+	errNotPolicy = fmt.Errorf("managed resource is not a policy")
 )
 
 type connector struct {
@@ -25,7 +25,7 @@ type connector struct {
 	usage    resource.Tracker
 }
 
-type userClient struct {
+type policyClient struct {
 	ma       *madmin.AdminClient
 	recorder event.Recorder
 }
@@ -39,12 +39,12 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 		return nil, err
 	}
 
-	user, ok := mg.(*miniov1.User)
+	policy, ok := mg.(*miniov1.Policy)
 	if !ok {
-		return nil, errNotUser
+		return nil, errNotPolicy
 	}
 
-	config, err := c.getProviderConfig(ctx, user)
+	config, err := c.getProviderConfig(ctx, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 		return nil, err
 	}
 
-	uc := &userClient{
+	uc := &policyClient{
 		ma:       ma,
 		recorder: c.recorder,
 	}
@@ -62,8 +62,8 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	return uc, nil
 }
 
-func (c *connector) getProviderConfig(ctx context.Context, user *miniov1.User) (*providerv1.ProviderConfig, error) {
-	configName := user.GetProviderConfigReference().Name
+func (c *connector) getProviderConfig(ctx context.Context, policy *miniov1.Policy) (*providerv1.ProviderConfig, error) {
+	configName := policy.GetProviderConfigReference().Name
 	config := &providerv1.ProviderConfig{}
 	err := c.kube.Get(ctx, client.ObjectKey{Name: configName}, config)
 	return config, err
