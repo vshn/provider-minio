@@ -2,10 +2,12 @@
 * https://github.com/vshn/provider-minio/releases[Changelog,window=_blank] 🔗
 
 .Tutorials
-//* xref:tutorials/example.adoc[Example Tutorial]
+* xref:tutorials/installation.adoc[Installation]
+* xref:tutorials/getting-started.adoc[Getting Started]
+
 
 .How To
-//* xref:how-tos/example.adoc[Example How-To]
+* xref:how-tos/create-releases.adoc[Create Releases]
 
 .Technical reference
 //* xref:references/example.adoc[Example Reference]

@@ -1,0 +1,75 @@
+= Getting Started
+
+This page describes how to create a new S3 bucket after you have installed the operator.
+
+== Prerequisites
+
+* `kubectl`
+* Already running Kubernetes cluster
+* Installed minio
+* Installed Operator
+
+== Steps
+
+. Create a file with the spec
++
+.config.yaml
+[source,yaml]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-secret
+  namespace: crossplane-system
+stringData:
+  AWS_ACCESS_KEY_ID: minioadmin <1>
+  AWS_SECRET_ACCESS_KEY: minioadmin <1>
+---
+apiVersion: minio.crossplane.io/v1
+kind: ProviderConfig
+metadata:
+  name: provider-config
+spec:
+  credentials:
+    apiSecretRef:
+      name: minio-secret
+      namespace: crossplane-system
+    source: InjectedIdentity
+  minioURL: http://minio-server.minio.svc:9000/ <2>
+status: {}
+
+----
+<1> Please adjust the credendials according to your minio installation
+<2> Please adjust the URL according to your minio installation
+
+. Apply the spec in the cluster
++
+[source,bash]
+----
+kubectl apply -f config.yaml
+----
+
+. Create a bucket
++
+.bucket.yaml
+[source,yaml]
+----
+apiVersion: minio.crossplane.io/v1
+kind: Bucket
+metadata:
+  name: mybucket
+spec:
+  forProvider: {}
+  providerConfigRef:
+    name: provider-config
+status:
+  atProvider: {}
+----
+
+. Wait until the operator has provisioned the user
++
+[source,bash]
+----
+kubectl apply -f bucket.yaml
+kubectl wait --for condition=Ready bucket/mybucket
+----
