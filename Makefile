@@ -36,6 +36,8 @@ build-bin: fmt vet ## Build binary
 
 .PHONY: build-docker
 build-docker: build-bin ## Build docker image
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+	go build -o ${BIN_FILENAME}
 	$(DOCKER_CMD) build -t $(CONTAINER_IMG) .
 
 .PHONY: test

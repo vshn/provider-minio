@@ -17,7 +17,8 @@ DOCKER_CMD ?= docker
 CONTAINER_REGISTRY ?= ghcr.io
 UPBOUND_CONTAINER_REGISTRY ?= xpkg.upbound.io
 
-IMG_TAG ?= latest
+GIT_TAG = $(shell git symbolic-ref -q --short HEAD || git describe --tags --exact-match)
+IMG_TAG = $(subst /,_,$(GIT_TAG))
 # Image URL to use all building/pushing image targets
 CONTAINER_IMG ?= $(CONTAINER_REGISTRY)/$(PROJECT_OWNER)/$(PROJECT_NAME)/controller:$(IMG_TAG)
 LOCAL_PACKAGE_IMG = localhost:5000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IMG_TAG)
