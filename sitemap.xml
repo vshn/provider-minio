@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>https://vshn.github.io/provider-minio/provider-minio/how-tos/create-releases.html</loc>
+<lastmod>2023-09-05T12:50:24.520Z</lastmod>
+</url>
+<url>
 <loc>https://vshn.github.io/provider-minio/provider-minio/index.html</loc>
-<lastmod>2023-09-05T12:28:27.995Z</lastmod>
+<lastmod>2023-09-05T12:50:24.520Z</lastmod>
+</url>
+<url>
+<loc>https://vshn.github.io/provider-minio/provider-minio/tutorials/getting-started.html</loc>
+<lastmod>2023-09-05T12:50:24.520Z</lastmod>
+</url>
+<url>
+<loc>https://vshn.github.io/provider-minio/provider-minio/tutorials/installation.html</loc>
+<lastmod>2023-09-05T12:50:24.520Z</lastmod>
 </url>
 </urlset>
