@@ -33,7 +33,7 @@ package-provider-local: $(crossplane_bin) generate ## Build Crossplane package f
 
 .PHONY: package-provider
 package-provider: export CONTROLLER_IMG = $(CONTAINER_IMG)
-package-provider: $(up_bin) generate-go build-docker ## Build Crossplane package for Upbound Marketplace
+package-provider: $(up_bin) generate build-docker ## Build Crossplane package for Upbound Marketplace
 	@rm -rf package/*.xpkg
 	@yq e 'del(.spec)' $(package_dir)/crossplane.yaml.template > $(package_dir)/crossplane.yaml
 	$(up_bin) xpkg build -f $(package_dir) -o $(package_dir)/provider-minio.xpkg --controller=$(CONTROLLER_IMG)
