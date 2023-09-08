@@ -27,29 +27,29 @@ dockers:
   build_flag_templates:
   - "--platform=linux/amd64"
   image_templates:
-  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+  - "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
 
 - goarch: arm64
   use: buildx
   build_flag_templates:
     - "--platform=linux/arm64/v8"
   image_templates:
-  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+  - "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
 
 docker_manifests:
 
   ## ghcr.io
   # For prereleases, updating `latest` does not make sense.
   # Only the image for the exact version should be pushed.
-  - name_template: "{{ if not .Prerelease }}{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:latest{{ end }}"
+  - name_template: "{{ if not .Prerelease }}{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:latest{{ end }}"
     image_templates:
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+      - "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
       - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
 
-  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+  - name_template: "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
     image_templates:
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+      - "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+      - "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
 
 release:
   prerelease: auto
