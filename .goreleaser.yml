@@ -44,7 +44,7 @@ docker_manifests:
   - name_template: "{{ if not .Prerelease }}{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:latest{{ end }}"
     image_templates:
       - "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+      - "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
 
   - name_template: "{{ .Env.CONTAINER_REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
     image_templates:
