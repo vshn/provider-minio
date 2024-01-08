@@ -16,10 +16,12 @@ import (
 )
 
 func TestProvisioningPipeline_Observe(t *testing.T) {
+	policy := "policy-struct"
 	tests := map[string]struct {
 		givenBucket  *miniov1.Bucket
 		bucketExists bool
 		returnError  error
+		policyLatest bool
 
 		expectedError             string
 		expectedResult            managed.ExternalObservation
@@ -28,6 +30,13 @@ func TestProvisioningPipeline_Observe(t *testing.T) {
 		"NewBucketDoesntYetExistOnMinio": {
 			givenBucket: &miniov1.Bucket{Spec: miniov1.BucketSpec{ForProvider: miniov1.BucketParameters{
 				BucketName: "my-bucket"}},
+			},
+			expectedResult: managed.ExternalObservation{},
+		},
+		"NewBucketWithPolicyDoesntYetExistOnMinio": {
+			givenBucket: &miniov1.Bucket{Spec: miniov1.BucketSpec{ForProvider: miniov1.BucketParameters{
+				BucketName: "my-bucket-with-policy",
+				Policy:     &policy}},
 			},
 			expectedResult: managed.ExternalObservation{},
 		},
@@ -80,6 +89,20 @@ func TestProvisioningPipeline_Observe(t *testing.T) {
 			expectedResult: managed.ExternalObservation{},
 			expectedError:  "mismatching endpointURL and zone, or bucket exists already in a different region, try changing bucket name: 301 Moved Permanently",
 		},
+		"BucketPolicyNoChangeRequired": {
+			givenBucket: &miniov1.Bucket{
+				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+					lockAnnotation: "claimed",
+				}},
+				Spec: miniov1.BucketSpec{ForProvider: miniov1.BucketParameters{
+					BucketName: "my-bucket",
+					Policy:     &policy}},
+			},
+			policyLatest:              true,
+			bucketExists:              true,
+			expectedResult:            managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true},
+			expectedBucketObservation: miniov1.BucketProviderStatus{BucketName: "my-bucket"},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -87,6 +110,11 @@ func TestProvisioningPipeline_Observe(t *testing.T) {
 			defer func() {
 				bucketExistsFn = currFn
 			}()
+
+			bucketPolicyLatestFn = func(ctx context.Context, mc *minio.Client, bucketName string, policy string) (bool, error) {
+				return tc.policyLatest, tc.returnError
+			}
+
 			bucketExistsFn = func(ctx context.Context, mc *minio.Client, bucketName string) (bool, error) {
 				return tc.bucketExists, tc.returnError
 			}

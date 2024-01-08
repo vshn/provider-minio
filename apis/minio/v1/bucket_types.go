@@ -79,6 +79,10 @@ type BucketParameters struct {
 	//  `DeleteAll` recursively deletes all objects in the bucket and then removes it.
 	// To skip deletion of the bucket (orphan it) set `spec.deletionPolicy=Orphan`.
 	BucketDeletionPolicy BucketDeletionPolicy `json:"bucketDeletionPolicy,omitempty"`
+
+	// Policy is a raw S3 bucket policy.
+	// Please consult https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html for more details about the policy.
+	Policy *string `json:"policy,omitempty"`
 }
 
 type BucketProviderStatus struct {
