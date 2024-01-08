@@ -18,6 +18,15 @@ var bucketExistsFn = func(ctx context.Context, mc *minio.Client, bucketName stri
 	return mc.BucketExists(ctx, bucketName)
 }
 
+var bucketPolicyLatestFn = func(ctx context.Context, mc *minio.Client, bucketName string, policy string) (bool, error) {
+	current, err := mc.GetBucketPolicy(ctx, bucketName)
+	if err != nil {
+		return false, err
+	}
+
+	return current == policy, nil
+}
+
 func (d *bucketClient) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 	log.V(1).Info("observing resource")
@@ -45,7 +54,18 @@ func (d *bucketClient) Observe(ctx context.Context, mg resource.Managed) (manage
 	if _, hasAnnotation := bucket.GetAnnotations()[lockAnnotation]; hasAnnotation && exists {
 		bucket.Status.AtProvider.BucketName = bucketName
 		bucket.SetConditions(xpv1.Available())
-		return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true}, nil
+
+		isLatest := true
+		if bucket.Spec.ForProvider.Policy != nil {
+			u, err := bucketPolicyLatestFn(ctx, d.mc, bucketName, *bucket.Spec.ForProvider.Policy)
+			if err != nil {
+				return managed.ExternalObservation{}, errors.Wrap(err, "cannot determine whether a bucket policy exists")
+			}
+
+			isLatest = u
+		}
+
+		return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: isLatest}, nil
 	} else if exists {
 		return managed.ExternalObservation{}, fmt.Errorf("bucket already exists, try changing bucket name: %s", bucketName)
 	}

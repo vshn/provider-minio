@@ -86,6 +86,11 @@ spec:
                       follows RFC 1123. Be aware that S3 providers may require a unique
                       name across the platform or zone.
                     type: string
+                  policy:
+                    description: Policy is a raw S3 bucket policy. Please consult
+                      https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html
+                      for more details about the policy.
+                    type: string
                   region:
                     default: us-east-1
                     description: Region is the name of the region where the bucket
