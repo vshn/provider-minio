@@ -10,12 +10,11 @@ require (
 	github.com/minio/madmin-go/v3 v3.0.18
 	github.com/minio/minio-go/v7 v7.0.63
 	github.com/minio/pkg v1.7.5
-	github.com/minio/pkg/v2 v2.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.27.0
 	k8s.io/api v0.28.1
 	k8s.io/apimachinery v0.28.1
 	k8s.io/client-go v0.28.1
