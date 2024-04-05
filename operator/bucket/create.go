@@ -25,6 +25,13 @@ func (b *bucketClient) Create(ctx context.Context, mg resource.Managed) (managed
 		return managed.ExternalCreation{}, err
 	}
 
+	if bucket.Spec.ForProvider.Policy != nil {
+		err = b.mc.SetBucketPolicy(ctx, bucket.GetBucketName(), *bucket.Spec.ForProvider.Policy)
+		if err != nil {
+			return managed.ExternalCreation{}, err
+		}
+	}
+
 	b.setLock(bucket)
 
 	return managed.ExternalCreation{}, b.emitCreationEvent(bucket)

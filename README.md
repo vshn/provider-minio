@@ -10,7 +10,7 @@
 
 Crossplane provider for managing resources on min.io.
 
-Documentation: https://vshn.github.io/provider-minio/
+Documentation: https://vshn.github.io/provider-minio/provider-minio/
 
 ## Local Development
 
