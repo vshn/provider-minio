@@ -2,6 +2,8 @@ module github.com/vshn/provider-minio
 
 go 1.22
 
+toolchain go1.22.0
+
 require (
 	github.com/crossplane/crossplane-runtime v1.14.0-rc.0.0.20230815060607-4f3cb3d9fd2b
 	github.com/crossplane/crossplane-tools v0.0.0-20230714144037-2684f4bc7638
@@ -10,7 +12,6 @@ require (
 	github.com/minio/madmin-go/v3 v3.0.18
 	github.com/minio/minio-go/v7 v7.0.63
 	github.com/minio/pkg v1.7.5
-	github.com/minio/pkg/v2 v2.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/stretchr/testify v1.8.4
