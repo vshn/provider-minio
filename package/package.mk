@@ -28,7 +28,7 @@ package-provider-local: export CONTROLLER_IMG = $(CONTAINER_IMG)
 package-provider-local: $(crossplane_bin) generate ## Build Crossplane package for local installation in kind-cluster
 	@rm -rf package/*.xpkg
 	@yq e '.spec.controller.image=strenv(CONTROLLER_IMG)' $(package_dir)/crossplane.yaml.template > $(package_dir)/crossplane.yaml
-	@$(crossplane_bin) build provider -f $(package_dir)
+	@$(crossplane_bin) xpkg build --package-root=$(package_dir)
 	@echo Package file: $$(ls $(package_dir)/*.xpkg)
 
 .PHONY: package-provider
@@ -41,12 +41,12 @@ package-provider: $(up_bin) generate build-docker ## Build Crossplane package fo
 .PHONY: .local-package-push
 .local-package-push: pkg_file = $(shell ls $(package_dir)/*.xpkg)
 .local-package-push: $(crossplane_bin) package-provider-local
-	$(crossplane_bin) push provider -f $(pkg_file) $(LOCAL_PACKAGE_IMG)
+	$(crossplane_bin) xpkg push -f $(pkg_file) $(LOCAL_PACKAGE_IMG)
 
 .PHONY: .ghcr-package-push
 .ghcr-package-push: pkg_file = $(package_dir)/provider-minio.xpkg
 .ghcr-package-push: $(crossplane_bin) package-provider
-	$(crossplane_bin) push provider -f $(pkg_file) $(GHCR_PACKAGE_IMG)
+	$(crossplane_bin) xpkg push -f $(pkg_file) $(GHCR_PACKAGE_IMG)
 
 .PHONY: .upbound-package-push
 .upbound-package-push: pkg_file = $(package_dir)/provider-minio.xpkg
