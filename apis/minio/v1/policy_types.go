@@ -31,7 +31,9 @@ type Policy struct {
 
 type PolicySpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       PolicyParameters `json:"forProvider,omitempty"`
+	ProviderReference *xpv1.Reference `json:"providerReference,omitempty"`
+
+	ForProvider PolicyParameters `json:"forProvider,omitempty"`
 }
 
 type PolicyStatus struct {

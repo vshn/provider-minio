@@ -32,7 +32,9 @@ type User struct {
 
 type UserSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       UserParameters `json:"forProvider,omitempty"`
+	ProviderReference *xpv1.Reference `json:"providerReference,omitempty"`
+
+	ForProvider UserParameters `json:"forProvider,omitempty"`
 }
 
 type UserStatus struct {

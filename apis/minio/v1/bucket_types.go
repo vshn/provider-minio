@@ -48,6 +48,7 @@ type Bucket struct {
 
 type BucketSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
+	ProviderReference *xpv1.Reference  `json:"providerReference,omitempty"`
 	ForProvider       BucketParameters `json:"forProvider,omitempty"`
 }
 
