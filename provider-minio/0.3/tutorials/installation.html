@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Getting Started :: Crossplane Provider Minio</title>
-    <meta property="og:title" itemprop="name" content="Getting Started">
-    <meta name="twitter:title" content="Getting Started">
-    <link rel="canonical" href="https://vshn.github.io/provider-minio/provider-minio/tutorials/getting-started.html">
-    <meta property="og:url" content="https://vshn.github.io/provider-minio/provider-minio/tutorials/getting-started.html">
+    <title>Installation :: Crossplane Provider Minio</title>
+    <meta property="og:title" itemprop="name" content="Installation">
+    <meta name="twitter:title" content="Installation">
+    <link rel="canonical" href="https://vshn.github.io/provider-minio/provider-minio/tutorials/installation.html">
+    <meta property="og:url" content="https://vshn.github.io/provider-minio/provider-minio/tutorials/installation.html">
     <meta name="generator" content="Antora 3.1.2">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css">
@@ -38,7 +38,7 @@
         <div class="vshn_logo"></div>
         <a href="https://vshn.github.io/provider-minio">Crossplane Provider Minio
            –
-          v0.2</a>
+          v0.3</a>
       </div>
       <button class="navbar-burger" data-target="topbar-nav">
         <span></span>
@@ -75,7 +75,7 @@
   </nav>
 </header>
 <div class="body">
-<div class="nav-container" data-component="provider-minio" data-version="0.2">
+<div class="nav-container" data-component="provider-minio" data-version="0.3">
   <aside class="nav">
     <div class="panels">
 <div class="nav-panel-menu is-active" data-panel="menu">
@@ -96,10 +96,10 @@
     <button class="nav-item-toggle"></button>
     <span class="nav-text">Tutorials</span>
 <ul class="nav-list">
-  <li class="nav-item" data-depth="1">
+  <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="installation.html">Installation</a>
   </li>
-  <li class="nav-item is-current-page" data-depth="1">
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="getting-started.html">Getting Started</a>
   </li>
 </ul>
@@ -119,7 +119,7 @@
 <div class="nav-panel-explore" data-panel="explore">
   <div class="context">
     <span class="title">Crossplane Provider Minio</span>
-    <span class="version">0.2</span>
+    <span class="version">0.3</span>
   </div>
   <ul class="components">
     <li class="component is-current">
@@ -128,11 +128,11 @@
         <li class="version is-latest">
           <a href="../../index.html">master</a>
         </li>
-        <li class="version">
-          <a href="../../0.3/index.html">0.3</a>
-        </li>
         <li class="version is-current">
-          <a href="../index.html">0.2</a>
+          <a href="../index.html">0.3</a>
+        </li>
+        <li class="version">
+          <a href="../../0.2/index.html">0.2</a>
         </li>
         <li class="version">
           <a href="../../0.1/index.html">0.1</a>
@@ -151,30 +151,30 @@
   <ul>
     <li><a href="../index.html">Crossplane Provider Minio</a></li>
     <li>Tutorials</li>
-    <li><a href="getting-started.html">Getting Started</a></li>
+    <li><a href="installation.html">Installation</a></li>
   </ul>
 </nav>
 <div class="page-versions">
-  <button class="version-menu-toggle" title="Show other versions of page">0.2</button>
+  <button class="version-menu-toggle" title="Show other versions of page">0.3</button>
   <div class="version-menu">
-    <a class="version" href="../../tutorials/getting-started.html">master</a>
-    <a class="version" href="../../0.3/tutorials/getting-started.html">0.3</a>
-    <a class="version is-current" href="getting-started.html">0.2</a>
-    <a class="version" href="../../0.1/tutorials/getting-started.html">0.1</a>
+    <a class="version" href="../../tutorials/installation.html">master</a>
+    <a class="version is-current" href="installation.html">0.3</a>
+    <a class="version" href="../../0.2/tutorials/installation.html">0.2</a>
+    <a class="version" href="../../0.1/tutorials/installation.html">0.1</a>
   </div>
 </div>
-  <div class="edit-this-page"><a href="https://github.com/vshn/provider-minio/edit/docs/v0.2/docs/modules/ROOT/pages/tutorials/getting-started.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/vshn/provider-minio/edit/docs/v0.3/docs/modules/ROOT/pages/tutorials/installation.adoc">Edit this Page</a></div>
   </div>
   <div class="content">
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Getting Started</h1>
+<h1 class="page">Installation</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>This page describes how to create a new S3 bucket after you have installed the operator.</p>
+<p>This tutorial goes through the steps required to get the operator up and running.</p>
 </div>
 </div>
 </div>
@@ -187,13 +187,7 @@
 <p><code>kubectl</code></p>
 </li>
 <li>
-<p>Already running Kubernetes cluster</p>
-</li>
-<li>
-<p>Installed minio</p>
-</li>
-<li>
-<p>Installed Operator</p>
+<p>A running Kubernetes cluster with cluster-admin permissions</p>
 </li>
 </ul>
 </div>
@@ -205,82 +199,64 @@
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Create a file with the spec</p>
+<p>Install Crossplane chart</p>
 <div class="listingblock">
-<div class="title">config.yaml</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: v1
-kind: Secret
-metadata:
-  name: minio-secret
-  namespace: crossplane-system
-stringData:
-  AWS_ACCESS_KEY_ID: minioadmin <i class="conum" data-value="1"></i><b>(1)</b>
-  AWS_SECRET_ACCESS_KEY: minioadmin <i class="conum" data-value="1"></i><b>(1)</b>
----
-apiVersion: minio.crossplane.io/v1
-kind: ProviderConfig
-metadata:
-  name: provider-config
-spec:
-  credentials:
-    apiSecretRef:
-      name: minio-secret
-      namespace: crossplane-system
-    source: InjectedIdentity
-  minioURL: http://minio-server.minio.svc:9000/ <i class="conum" data-value="2"></i><b>(2)</b>
-status: {}</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">helm repo add crossplane https://charts.crossplane.io/stable
+helm upgrade --install crossplane crossplane/crossplane \
+  --create-namespace \
+  --namespace crossplane-system \
+  --set "args[1]='--enable-composition-revisions'" \
+  --set webhooks.enabled=true \
+  --wait</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>Install Minio Chart</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">helm repo add minio https://charts.min.io/ --force-update
+helm upgrade --install --create-namespace --namespace minio minio --version 5.0.7 minio/minio \
+	--values values.yaml <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Please adjust the credendials according to your minio installation</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Please adjust the URL according to your minio installation</td>
+<td>Please provide a values.yaml file that fits your purpose</td>
 </tr>
 </table>
 </div>
 </li>
 <li>
-<p>Apply the spec in the cluster</p>
+<p>Install <code>provider-minio</code></p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f config.yaml</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Create a bucket</p>
-<div class="listingblock">
-<div class="title">bucket.yaml</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: minio.crossplane.io/v1
-kind: Bucket
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
 metadata:
-  name: mybucket
+  labels:
+    name: provider-minio
+  name: provider-minio
 spec:
-  forProvider: {}
-  providerConfigRef:
-    name: provider-config
-status:
-  atProvider: {}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Wait until the operator has provisioned the user</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f bucket.yaml
-kubectl wait --for condition=Ready bucket/mybucket</code></pre>
+  package: ghcr.io/vshn/provider-minio/package:latest
+EOF</code></pre>
 </div>
 </div>
 </li>
 </ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion"><a class="anchor" href="#_conclusion"></a>Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now that you have the basic Provider running, it&#8217;s time to get started with deploying resources.
+See <a href="getting-started.html" class="xref page">Tutorial: Getting Started</a> to get started.</p>
 </div>
 </div>
 </div>
