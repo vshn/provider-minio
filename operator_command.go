@@ -9,6 +9,7 @@ import (
 	"github.com/vshn/provider-minio/operator"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 type operatorCommand struct {
@@ -55,8 +56,10 @@ func (o *operatorCommand) execute(ctx *cli.Context) error {
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 		LeaseDuration:              func() *time.Duration { d := 60 * time.Second; return &d }(),
 		RenewDeadline:              func() *time.Duration { d := 50 * time.Second; return &d }(),
-		Port:                       9443,
-		CertDir:                    o.WebhookCertDir,
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port:    9443,
+			CertDir: o.WebhookCertDir,
+		}),
 	})
 
 	if err != nil {
