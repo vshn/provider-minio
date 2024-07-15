@@ -10,6 +10,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/minio/madmin-go/v3"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
+	k8svi "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -57,6 +59,28 @@ func (u *userClient) Observe(ctx context.Context, mg resource.Managed) (managed.
 		user.SetConditions(xpv1.Available())
 	} else {
 		user.SetConditions(miniov1.Disabled())
+	}
+
+	if mg.GetDeletionTimestamp() == nil {
+
+		secret := k8svi.Secret{}
+
+		err = u.kube.Get(ctx, types.NamespacedName{
+			Namespace: mg.GetWriteConnectionSecretToReference().Namespace,
+			Name:      mg.GetWriteConnectionSecretToReference().Name,
+		}, &secret)
+		if err != nil {
+			return managed.ExternalObservation{}, err
+		}
+
+		// this here prevents painful user errors with password generation using bash shell and `echo`
+		// if You want to use `echo` to generate a password, use `echo -n` to prevent adding a newline
+		strippedFromNewline := strings.ReplaceAll(string(secret.Data[AccessKeyName]), "\n", "")
+
+		err = u.ma.SetUser(ctx, string(secret.Data[AccessKeyName]), strippedFromNewline, madmin.AccountEnabled)
+		if err != nil {
+			return managed.ExternalObservation{}, err
+		}
 	}
 
 	return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true}, nil

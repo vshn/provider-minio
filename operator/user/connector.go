@@ -27,6 +27,7 @@ type connector struct {
 
 type userClient struct {
 	ma       *madmin.AdminClient
+	kube     client.Client
 	recorder event.Recorder
 }
 
@@ -56,6 +57,7 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 
 	uc := &userClient{
 		ma:       ma,
+		kube:     c.kube,
 		recorder: c.recorder,
 	}
 
