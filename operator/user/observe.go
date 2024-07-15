@@ -73,11 +73,7 @@ func (u *userClient) Observe(ctx context.Context, mg resource.Managed) (managed.
 			return managed.ExternalObservation{}, err
 		}
 
-		// this here prevents painful user errors with password generation using bash shell and `echo`
-		// if You want to use `echo` to generate a password, use `echo -n` to prevent adding a newline
-		strippedFromNewline := strings.ReplaceAll(string(secret.Data[AccessKeyName]), "\n", "")
-
-		err = u.ma.SetUser(ctx, string(secret.Data[AccessKeyName]), strippedFromNewline, madmin.AccountEnabled)
+		err = u.ma.SetUser(ctx, string(secret.Data[AccessKeyName]), string(secret.Data[SecretKeyName]), madmin.AccountEnabled)
 		if err != nil {
 			return managed.ExternalObservation{}, err
 		}
