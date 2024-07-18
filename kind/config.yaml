@@ -10,12 +10,12 @@ nodes:
             node-labels: "ingress-ready=true"
     extraPortMappings:
       - containerPort: 80
-        hostPort: 8088
+        hostPort: 10088
         protocol: TCP
       - containerPort: 443
-        hostPort: 8443
+        hostPort: 10443
         protocol: TCP
       # registry can't be sensibly exposed via Ingress under 127.0.0.0.nip.io host with subpath
       - containerPort: 30500
-        hostPort: 5000
+        hostPort: 15000
         protocol: TCP
