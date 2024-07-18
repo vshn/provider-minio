@@ -10,7 +10,7 @@ INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 .PHONY: local-install
 local-install: export KUBECONFIG = $(KIND_KUBECONFIG)
 # for ControllerConfig:
-local-install: export INTERNAL_PACKAGE_IMG = registry.registry-system.svc.cluster.local:5000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IMG_TAG)
+local-install: export INTERNAL_PACKAGE_IMG = registry.registry-system.svc.cluster.local:15000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IMG_TAG)
 local-install: kind-load-image crossplane-setup registry-setup .local-package-push minio-setup ## Install Operator in local cluster
 	yq e '.spec.metadata.annotations."local.dev/installed"="$(shell date)"' test/controllerconfig-minio.yaml | kubectl apply -f -
 	yq e '.spec.package=strenv(INTERNAL_PACKAGE_IMG)' test/provider-minio.yaml | kubectl apply -f -
