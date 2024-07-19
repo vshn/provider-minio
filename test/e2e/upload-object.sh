@@ -12,4 +12,10 @@ access_key=$(kubectl -n "${secret_namespace}" get secret "${secret_name}" -o jso
 secret_key=$(kubectl -n "${secret_namespace}" get secret "${secret_name}" -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)
 export MC_HOST_minio=http://${access_key}:${secret_key}@${endpoint}
 
-"${GOBIN}/mc" cp --quiet "${file_path}" "minio/${bucket_name}"
+echo "Uploading object to bucket: ${bucket_name}"
+echo "File path: ${file_path}"
+echo "Endpoint: ${endpoint}"
+echo "Access key: ${access_key}"
+echo "Secret key: ${secret_key}"
+
+"${GOBIN}/mc" cp --quiet --debug "${file_path}" "minio/${bucket_name}"

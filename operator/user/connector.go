@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
@@ -26,8 +27,11 @@ type connector struct {
 }
 
 type userClient struct {
-	ma       *madmin.AdminClient
-	recorder event.Recorder
+	ma          *madmin.AdminClient
+	kube        client.Client
+	recorder    event.Recorder
+	url         *url.URL
+	tlsSettings bool
 }
 
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
@@ -54,9 +58,17 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 		return nil, err
 	}
 
+	_, tls, parsed, err := minioutil.ExtractDataFromProviderConfig(ctx, c.kube, config)
+	if err != nil {
+		return nil, err
+	}
+
 	uc := &userClient{
-		ma:       ma,
-		recorder: c.recorder,
+		ma:          ma,
+		kube:        c.kube,
+		recorder:    c.recorder,
+		url:         parsed,
+		tlsSettings: tls,
 	}
 
 	return uc, nil

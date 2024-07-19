@@ -8,7 +8,10 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/minio/madmin-go/v3"
+
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
+	k8svi "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
@@ -46,6 +49,24 @@ func (u *userClient) Update(ctx context.Context, mg resource.Managed) (managed.E
 	err = u.setUserPolicies(ctx, user.GetUserName(), user.Spec.ForProvider.Policies)
 	if err != nil {
 		return managed.ExternalUpdate{}, err
+	}
+
+	if mg.GetDeletionTimestamp() == nil {
+
+		secret := k8svi.Secret{}
+
+		err = u.kube.Get(ctx, types.NamespacedName{
+			Namespace: mg.GetWriteConnectionSecretToReference().Namespace,
+			Name:      mg.GetWriteConnectionSecretToReference().Name,
+		}, &secret)
+		if err != nil {
+			return managed.ExternalUpdate{}, err
+		}
+
+		err = u.ma.SetUser(ctx, string(secret.Data[AccessKeyName]), string(secret.Data[SecretKeyName]), madmin.AccountEnabled)
+		if err != nil {
+			return managed.ExternalUpdate{}, err
+		}
 	}
 
 	u.emitUpdateEvent(user)
