@@ -1,6 +1,6 @@
 name: provider-minio
 title: Crossplane Provider Minio
-version: master
+version: "0.4"
 start_page: ROOT:index.adoc
 nav:
   - modules/ROOT/nav.adoc
