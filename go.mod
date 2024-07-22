@@ -7,7 +7,7 @@ toolchain go1.22.0
 require (
 	github.com/crossplane/crossplane-runtime v1.15.1
 	github.com/crossplane/crossplane-tools v0.0.0-20240522174801-1ad3d4c87f21
-	github.com/go-logr/logr v1.4.1
+	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/zapr v1.3.0
 	github.com/minio/madmin-go/v3 v3.0.18
 	github.com/minio/minio-go/v7 v7.0.63
