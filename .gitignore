@@ -6,7 +6,6 @@
 /provider-minio
 *.out
 /package/*.xpkg
-/package/crossplane.yaml
 /kubeconfig
 __debug*
 
@@ -18,3 +17,4 @@ __debug*
 # work
 /.work/
 .vscode/
+.kind

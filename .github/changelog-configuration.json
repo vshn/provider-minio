@@ -4,25 +4,19 @@
     {
       "title": "## 🚀 Features",
       "labels": [
-        "enhancement"
-      ]
-    },
-    {
-      "title": "## 🛠️ Minor Changes",
-      "labels": [
-        "change"
+        "minor"
       ]
     },
     {
       "title": "## 🔎 Breaking Changes",
       "labels": [
-        "breaking"
+        "major"
       ]
     },
     {
       "title": "## 🐛 Fixes",
       "labels": [
-        "bug"
+        "patch"
       ]
     },
     {

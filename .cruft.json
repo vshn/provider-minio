@@ -1,0 +1,20 @@
+{
+  "template": "https://github.com/vshn/appcat-cookiecutter",
+  "commit": "5309ae05edb3c118e23e64e8ec0bed2b6768ac86",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "app_name": "provider-minio",
+      "component_repo": "vshn/component-appcat",
+      "push_upbound": true,
+      "push_package": true,
+      "push_image": false,
+      "_copy_without_render": [
+        ".github/workflows/cruft-update.yml",
+        ".github/changelog-configuration.json"
+      ],
+      "_template": "https://github.com/vshn/appcat-cookiecutter"
+    }
+  },
+  "directory": null
+}

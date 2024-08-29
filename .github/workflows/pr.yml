@@ -1,0 +1,217 @@
+name: PR Automation
+
+on:
+  pull_request: {}
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - master
+
+env:
+  APP_NAME: provider-minio
+  COMPONENT_REPO: vshn/component-appcat
+  PUSH_UPBOUND: "True"
+  PUSH_PACKAGE: "True"
+  PUSH_IMAGE: "False"
+
+jobs:
+  check-labels:
+    # Act doesn't set a pull request number by default, so we skip if it's 0
+    if: github.event.pull_request.number != 0
+    name: Check labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker://agilepathway/pull-request-label-checker:v1.6.51
+        with:
+          one_of: major,minor,patch,documentation,dependency
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+  publish-branch-images:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine Go version from go.mod
+        run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Extract escaped branch name
+        shell: bash
+        run: echo "branch=$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} | sed 's/\//_/g' )" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build branch and push image
+        if: env.PUSH_IMAGE == 'true'
+        run: make docker-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}"
+
+      - name: Build branch and push package
+        if: env.PUSH_PACKAGE == 'True'
+        run: make package-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}"
+
+      - name: Login to Upbound
+        if: env.PUSH_UPBOUND == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: xpkg.upbound.io
+          username: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR }}
+          password: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_PSW }}
+
+      - name: Build branch and push package to upbound
+        if: env.PUSH_UPBOUND == 'true' && env.PUSH_PACKAGE == 'true'
+        run: make package-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}" -e IMG_REPO=xpkg.upbound.io
+
+  open-pr-component:
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.COMPONENT_REPO }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Update defaults.yml and create branch
+        run: |
+          yq e '.parameters.appcat.images.${{ env.APP_NAME }}.tag="${{ steps.extract_branch.outputs.branch }}"' class/defaults.yml | diff -B class/defaults.yml - | patch class/defaults.yml - || true
+
+          git --no-pager diff
+
+      - name: Generate new golden
+        # Act uses the host's docker to run containers, but then
+        # they can't access the files that were previously cloned.
+        if: github.event.pull_request.number != 0
+        run: |
+          make gen-golden-all
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+          title: 'PR for ${{ env.APP_NAME }} on ${{ steps.extract_branch.outputs.branch }}'
+          body: "${{ github.event.pull_request.body}}\nLink: ${{ github.event.pull_request.url }}"
+          branch: "${{ env.APP_NAME }}/${{ github.event.pull_request.number }}/${{ steps.extract_branch.outputs.branch }}"
+          base: master
+          draft: false
+  create-release:
+    if: github.event.pull_request.merged
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for patch label
+        if: contains(github.event.pull_request.labels.*.name, 'patch') || contains(github.event.pull_request.labels.*.name, 'dependency') || contains(github.event.pull_request.labels.*.name, 'documentation')
+        id: patch
+        run: |
+          echo "set=true" >> $GITHUB_OUTPUT
+      - name: Check for minor label
+        if: contains(github.event.pull_request.labels.*.name, 'minor')
+        id: minor
+        run: |
+          echo "set=true" >> $GITHUB_OUTPUT
+      - name: Check for major label
+        if: contains(github.event.pull_request.labels.*.name, 'major')
+        id: major
+        run: |
+          echo "set=true" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          # Make sure we use the right commit to tag
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          # We also need to use the personal access token here. As subsequent
+          # actions will not trigger by tags/pushes that use `GITHUB_TOKEN`
+          # https://github.com/orgs/community/discussions/25702#discussioncomment-3248819
+          token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+          # This is broken in checkout@v4...
+          # https://github.com/actions/checkout/issues/1781
+          fetch-tags: true
+
+      - name: fetch tags
+        run: |
+          git fetch --tags
+          echo "latest tag: $(git describe --tags "$(git rev-list --tags --max-count=1)")"
+          echo "TAG_VERSION=$(git describe --tags "$(git rev-list --tags --max-count=1)")" >>  $GITHUB_ENV
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      # We only run this if any of the release tags is set.
+      # For docs and deps we don't do automagic releases
+      - name: Increase Tag
+        id: tag
+        run: |
+          patch=${{ steps.patch.outputs.set }}
+          minor=${{ steps.minor.outputs.set }}
+          major=${{ steps.major.outputs.set }}
+
+          major_ver=$(echo '${{ env.TAG_VERSION }}' | cut -d "." -f1)
+          minor_ver=$(echo '${{ env.TAG_VERSION }}' | cut -d "." -f2)
+          patch_ver=$(echo '${{ env.TAG_VERSION }}' | cut -d "." -f3)
+
+          major_ver="${major_ver:1}"
+
+          # Check for patch label
+          [ ! -z "$patch" ] && [ -z "$minor" ] && [ -z "$major" ] && ((patch_ver++)) || true
+
+          # check for minor label
+          if [ ! -z "$minor" ] && [ -z "$major" ]; then
+            ((minor_ver++))
+            patch_ver=0
+          fi
+
+          # Check for major label
+          if [ ! -z "$major" ]; then
+            ((major_ver++))
+            minor_ver=0
+            patch_ver=0
+          fi
+
+          tag="v$major_ver.$minor_ver.$patch_ver"
+          echo "new tag $tag"
+          git tag $tag
+          git push --tags
+          echo tag=$tag >> $GITHUB_OUTPUT
+
+      - name: Checkout component
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.COMPONENT_REPO }}
+          token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+          ref: "${{ env.APP_NAME }}/${{ github.event.pull_request.number }}/${{ steps.extract_branch.outputs.branch }}"
+
+      - name: Update tag and run golden
+        run: |
+          yq e '.parameters.appcat.images.${{ env.APP_NAME }}.tag="${{ steps.tag.outputs.tag }}"' class/defaults.yml | diff -B class/defaults.yml - | patch class/defaults.yml - || true
+          make gen-golden-all
+
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+          branch: "${{ env.APP_NAME }}/${{ github.event.pull_request.number }}/${{ steps.extract_branch.outputs.branch }}"
+          message: "Update tag"
+          repository: ${{ env.COMPONENT_REPO }}
+
