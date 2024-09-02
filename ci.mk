@@ -46,7 +46,7 @@ package-build-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD 
 package-build-branchtag: docker-build-branchtag package-build
 
 .PHONY: package-push-package-branchtag
-package-push-package-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD | sed 's/\//_/g')
+package-push-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD | sed 's/\//_/g')
 package-push-branchtag: package-build-branchtag package-push
 
 .PHONY: docker-build-local
