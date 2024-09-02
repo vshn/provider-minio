@@ -13,8 +13,8 @@ include Makefile.vars.mk
 
 # Other makefiles
 include kind/kind.mk
-include package/package.mk
 include test/local.mk
+-include ci.mk
 
 # Following includes do not print warnings or error if files aren't found
 # Optional Documentation module.
@@ -27,18 +27,12 @@ help: ## Show this help
 	@grep -E -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: build
-build: build-bin build-docker ## All-in-one build
+build: build-bin docker-build ## All-in-one build
 
 .PHONY: build-bin
 build-bin: export CGO_ENABLED = 0
 build-bin: fmt vet ## Build binary
 	@go build -o $(BIN_FILENAME) .
-
-.PHONY: build-docker
-build-docker: build-bin ## Build docker image
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-	go build -o ${BIN_FILENAME}
-	$(DOCKER_CMD) build -t $(CONTAINER_IMG) .
 
 .PHONY: test
 test: test-go ## All-in-one test
@@ -73,7 +67,7 @@ generate: ## Generate additional code and artifacts
 
 .PHONY: clean
 clean: kind-clean ## Cleans local build artifacts
-	docker rmi $(CONTAINER_IMG) || true
+	docker rmi $(IMG) || true
 	rm -rf docs/node_modules $(docs_out_dir) dist .cache $(WORK_DIR)
 
 $(golangci_bin): | $(go_bin)

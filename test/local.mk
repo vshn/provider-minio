@@ -10,10 +10,10 @@ INTEGRATION_TEST_DEBUG_OUTPUT ?= false
 .PHONY: local-install
 local-install: export KUBECONFIG = $(KIND_KUBECONFIG)
 # for ControllerConfig:
-local-install: export INTERNAL_PACKAGE_IMG = registry.registry-system.svc.cluster.local:5000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IMG_TAG)
-local-install: kind-load-image crossplane-setup registry-setup .local-package-push minio-setup ## Install Operator in local cluster
+local-install: export INTERNAL_PACKAGE_IMG = registry.registry-system.svc.cluster.local:5000/$(ORG)/$(APP_NAME):$(IMG_TAG)
+local-install: kind-load-image crossplane-setup registry-setup minio-setup mirror-setup package-push-local ## Install Operator in local cluster
 	yq e '.spec.metadata.annotations."local.dev/installed"="$(shell date)"' test/controllerconfig-minio.yaml | kubectl apply -f -
-	yq e '.spec.package=strenv(INTERNAL_PACKAGE_IMG)' test/provider-minio.yaml | kubectl apply -f -
+	yq e '.spec.package="${INTERNAL_PACKAGE_IMG}"' test/provider-minio.yaml | kubectl apply -f -
 	kubectl wait --for condition=Healthy provider.pkg.crossplane.io/provider-minio --timeout 60s
 	kubectl -n crossplane-system wait --for condition=Ready $$(kubectl -n crossplane-system get pods -o name -l pkg.crossplane.io/provider=provider-minio) --timeout 60s
 
@@ -127,10 +127,7 @@ $(webhook_cert): $(webhook_key)
 ### with KUTTL (https://kuttl.dev)
 ###
 
-kuttl_bin = $(go_bin)/kubectl-kuttl
-$(kuttl_bin): export GOBIN = $(go_bin)
-$(kuttl_bin): | $(go_bin)
-	go install github.com/kudobuilder/kuttl/cmd/kubectl-kuttl@latest
+kuttl_bin = go run github.com/kudobuilder/kuttl/cmd/kubectl-kuttl@main
 
 mc_bin = $(go_bin)/mc
 $(mc_bin): export GOBIN = $(go_bin)
@@ -138,7 +135,7 @@ $(mc_bin): | $(go_bin)
 	go install github.com/minio/mc@latest
 
 test-e2e: export KUBECONFIG = $(KIND_KUBECONFIG)
-test-e2e: $(kuttl_bin) $(mc_bin) local-install provider-config install-crd ## E2E tests
+test-e2e: $(mc_bin) local-install provider-config install-crd ## E2E tests
 	# let's give the provider some time to properly start.
 	# Especially the webhooks can take a bit longer to be ready and then cause the whole run to fail
 	sleep 5
