@@ -111,7 +111,7 @@ jobs:
         with:
           token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
           title: 'PR for ${{ env.APP_NAME }} on ${{ steps.extract_branch.outputs.branch }}'
-          body: "${{ github.event.pull_request.body}}\nLink: ${{ github.event.pull_request.url }}"
+          body: "${{ github.event.pull_request.body}}\nLink: ${{ github.event.pull_request.html_url }}"
           branch: "${{ env.APP_NAME }}/${{ github.event.pull_request.number }}/${{ steps.extract_branch.outputs.branch }}"
           base: master
           draft: false
