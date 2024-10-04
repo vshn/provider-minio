@@ -48,6 +48,48 @@ func TestValidator_ValidateCreate_RequireProviderConfig(t *testing.T) {
 	}
 }
 
+func TestValidator_ValidateCreate_RequireLifecycleDaySpecification(t *testing.T) {
+	tests := map[string]struct {
+		expirationDays                  int
+		noncurrentVersionExpirationDays int
+		expectedError                   string
+	}{
+		"GivenBothExpirationDays_ThenExpectNoError": {
+			expirationDays:                  10,
+			noncurrentVersionExpirationDays: 10,
+		},
+		"GivenOnlyExpirationDays_ThenExpectNoError": {
+			expirationDays: 10,
+		},
+		"GivenOnlyVersionExpirationDays_ThenExpectNoError": {
+			noncurrentVersionExpirationDays: 10,
+		},
+		"GivenNoExpirationDays_ThenExpectError": {
+			expirationDays:                  0,
+			noncurrentVersionExpirationDays: 0,
+			expectedError:                   `spec.forProvider.lifecycleRules: Invalid value: v1.LifecycleRules{ID:"", ExpirationDays:0, NoncurrentVersionExpirationDays:0}: Either ExpirationDays or NoncurrentVersionExpirationDays must be declared and both can't be 0`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			bucket := &miniov1.Bucket{
+				ObjectMeta: metav1.ObjectMeta{Name: "bucket"},
+				Spec: miniov1.BucketSpec{
+					ForProvider:  miniov1.BucketParameters{BucketName: "bucket", LifecycleRules: []miniov1.LifecycleRules{{ExpirationDays: tc.expirationDays, NoncurrentVersionExpirationDays: tc.noncurrentVersionExpirationDays}}},
+					ResourceSpec: xpv1.ResourceSpec{ProviderConfigReference: &xpv1.Reference{Name: "provider-config"}},
+				},
+			}
+			v := &Validator{log: logr.Discard()}
+			_, err := v.ValidateCreate(context.TODO(), bucket)
+			if tc.expectedError != "" {
+				assert.EqualError(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestValidator_ValidateUpdate_PreventBucketNameChange(t *testing.T) {
 	tests := map[string]struct {
 		newBucketName string
@@ -190,6 +232,55 @@ func TestValidator_ValidateUpdate_PreventZoneChange(t *testing.T) {
 					ResourceSpec: xpv1.ResourceSpec{ProviderConfigReference: &xpv1.Reference{Name: "provider-config"}},
 				},
 				Status: miniov1.BucketStatus{AtProvider: miniov1.BucketProviderStatus{BucketName: "bucket"}},
+			}
+			v := &Validator{log: logr.Discard()}
+			_, err := v.ValidateUpdate(context.TODO(), oldBucket, newBucket)
+			if tc.expectedError != "" {
+				assert.EqualError(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidator_ValidateUpdate_RequireLifecycleDaySpecification(t *testing.T) {
+	tests := map[string]struct {
+		expirationDays                  int
+		noncurrentVersionExpirationDays int
+		expectedError                   string
+	}{
+		"GivenBothExpirationDays_ThenExpectNoError": {
+			expirationDays:                  10,
+			noncurrentVersionExpirationDays: 10,
+		},
+		"GivenOnlyExpirationDays_ThenExpectNoError": {
+			expirationDays: 10,
+		},
+		"GivenOnlyVersionExpirationDays_ThenExpectNoError": {
+			noncurrentVersionExpirationDays: 10,
+		},
+		"GivenNoExpirationDays_ThenExpectError": {
+			expirationDays:                  0,
+			noncurrentVersionExpirationDays: 0,
+			expectedError:                   `spec.forProvider.lifecycleRules: Invalid value: v1.LifecycleRules{ID:"", ExpirationDays:0, NoncurrentVersionExpirationDays:0}: Either ExpirationDays or NoncurrentVersionExpirationDays must be declared and both can't be 0`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			oldBucket := &miniov1.Bucket{
+				ObjectMeta: metav1.ObjectMeta{Name: "bucket"},
+				Spec: miniov1.BucketSpec{
+					ForProvider:  miniov1.BucketParameters{BucketName: "bucket", LifecycleRules: []miniov1.LifecycleRules{{ExpirationDays: tc.expirationDays, NoncurrentVersionExpirationDays: tc.noncurrentVersionExpirationDays}}},
+					ResourceSpec: xpv1.ResourceSpec{ProviderConfigReference: &xpv1.Reference{Name: "provider-config"}},
+				},
+			}
+			newBucket := &miniov1.Bucket{
+				ObjectMeta: metav1.ObjectMeta{Name: "bucket"},
+				Spec: miniov1.BucketSpec{
+					ForProvider:  miniov1.BucketParameters{BucketName: "bucket", LifecycleRules: []miniov1.LifecycleRules{{ExpirationDays: tc.expirationDays, NoncurrentVersionExpirationDays: tc.noncurrentVersionExpirationDays}}},
+					ResourceSpec: xpv1.ResourceSpec{ProviderConfigReference: &xpv1.Reference{Name: "provider-config"}},
+				},
 			}
 			v := &Validator{log: logr.Discard()}
 			_, err := v.ValidateUpdate(context.TODO(), oldBucket, newBucket)
