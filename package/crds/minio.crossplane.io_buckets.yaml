@@ -93,6 +93,25 @@ spec:
                       Name must be acceptable by the S3 protocol, which follows RFC 1123.
                       Be aware that S3 providers may require a unique name across the platform or zone.
                     type: string
+                  lifecycleRules:
+                    description: |-
+                      Bucket lifecycle rules.
+                      Please consult https://min.io/docs/minio/linux/administration/object-management/object-lifecycle-management.html for more details about object lifecycle management.
+                    items:
+                      properties:
+                        expirationDays:
+                          description: ExpirationDays is the number of days after
+                            which the object expires.
+                          type: integer
+                        id:
+                          description: ID is the unique identifier for the rule.
+                          type: string
+                        noncurrentVersionExpirationDays:
+                          description: NoncurrentVersionExpirationDays is the number
+                            of days after which the noncurrent versions expire.
+                          type: integer
+                      type: object
+                    type: array
                   policy:
                     description: |-
                       Policy is a raw S3 bucket policy.
