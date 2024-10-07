@@ -33,7 +33,7 @@ func (p *policyClient) Observe(ctx context.Context, mg resource.Managed) (manage
 		return managed.ExternalObservation{}, err
 	}
 
-	observedPolicy, ok := policies[policy.GetName()]
+	observedPolicy, ok := policies[policy.GetPolicyName()]
 	if !ok {
 		// The policy hasn't yet been created it seems
 		return managed.ExternalObservation{ResourceExists: false}, nil

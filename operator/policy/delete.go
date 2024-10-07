@@ -22,7 +22,7 @@ func (p *policyClient) Delete(ctx context.Context, mg resource.Managed) error {
 
 	policy.SetConditions(xpv1.Deleting())
 	p.emitDeletionEvent(policy)
-	return p.ma.RemoveCannedPolicy(ctx, policy.GetName())
+	return p.ma.RemoveCannedPolicy(ctx, policy.GetPolicyName())
 }
 
 func (p *policyClient) emitDeletionEvent(policy *miniov1.Policy) {
