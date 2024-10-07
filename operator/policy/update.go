@@ -26,7 +26,7 @@ func (p *policyClient) Update(ctx context.Context, mg resource.Managed) (managed
 		return managed.ExternalUpdate{}, err
 	}
 
-	_, ok = policies[policy.GetName()]
+	_, ok = policies[policy.GetPolicyName()]
 	if !ok {
 		return managed.ExternalUpdate{}, fmt.Errorf("policy does not exist")
 	}

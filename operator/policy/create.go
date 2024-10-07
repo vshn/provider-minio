@@ -37,7 +37,7 @@ func (p *policyClient) Create(ctx context.Context, mg resource.Managed) (managed
 		return managed.ExternalCreation{}, err
 	}
 
-	if _, ok := policyies[policy.GetName()]; ok {
+	if _, ok := policyies[policy.GetPolicyName()]; ok {
 		return managed.ExternalCreation{}, fmt.Errorf("policy already exists")
 	}
 
@@ -58,7 +58,7 @@ func (p *policyClient) createBucketPolicy(ctx context.Context, policy *miniov1.P
 		return err
 	}
 
-	err = p.ma.AddCannedPolicy(ctx, policy.GetName(), parsedPolicy)
+	err = p.ma.AddCannedPolicy(ctx, policy.GetPolicyName(), parsedPolicy)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (p *policyClient) createBucketPolicy(ctx context.Context, policy *miniov1.P
 }
 
 func (p *policyClient) createRawPolicy(ctx context.Context, policy *miniov1.Policy) error {
-	err := p.ma.AddCannedPolicy(ctx, policy.GetName(), []byte(policy.Spec.ForProvider.RawPolicy))
+	err := p.ma.AddCannedPolicy(ctx, policy.GetPolicyName(), []byte(policy.Spec.ForProvider.RawPolicy))
 	if err != nil {
 		return err
 	}

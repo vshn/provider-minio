@@ -47,6 +47,10 @@ type PolicyProviderStatus struct {
 }
 
 type PolicyParameters struct {
+	// The name of the policy
+	// Defaults to `metadata.name` if unset.
+	Name string `json:"name,omitempty"`
+
 	// AllowBucket will create a simple policy that allows all operations for the given bucket.
 	// Mutually exclusive to `RawPolicy`.
 	AllowBucket string `json:"allowBucket,omitempty"`
@@ -72,3 +76,11 @@ var (
 	PolicyKindAPIVersion   = PolicyKind + "." + SchemeGroupVersion.String()
 	PolicyGroupVersionKind = SchemeGroupVersion.WithKind(PolicyKind)
 )
+
+// GetPolicyName returns the spec.forProvider.name if given, otherwise defaults to metadata.name.
+func (in *Policy) GetPolicyName() string {
+	if in.Spec.ForProvider.Name == "" {
+		return in.Name
+	}
+	return in.Spec.ForProvider.Name
+}
