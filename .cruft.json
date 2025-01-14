@@ -13,7 +13,8 @@
         ".github/workflows/cruft-update.yml",
         ".github/changelog-configuration.json"
       ],
-      "_template": "https://github.com/vshn/appcat-cookiecutter"
+      "_template": "https://github.com/vshn/appcat-cookiecutter",
+      "_commit": "128d270ba199a581122ff74c2f82b8e3019490f0"
     }
   },
   "directory": null
