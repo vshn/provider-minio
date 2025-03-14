@@ -15,7 +15,7 @@ import (
 
 // SetupController adds a controller that reconciles managed resources.
 func SetupController(mgr ctrl.Manager) error {
-	name := strings.ToLower(miniov1.BucketGroupKind)
+	name := strings.ToLower(miniov1.PolicyGroupKind)
 	recorder := event.NewAPIRecorder(mgr.GetEventRecorderFor(name))
 
 	return SetupControllerWithConnecter(mgr, name, recorder, &connector{
