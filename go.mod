@@ -2,7 +2,7 @@ module github.com/vshn/provider-minio
 
 go 1.23
 
-toolchain go1.24.0
+toolchain go1.24.1
 
 require (
 	github.com/crossplane/crossplane-runtime v1.18.0
