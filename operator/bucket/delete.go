@@ -5,36 +5,37 @@ import (
 	"fmt"
 
 	"github.com/crossplane/crossplane-runtime/pkg/event"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/minio/minio-go/v7"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 
-func (b *bucketClient) Delete(ctx context.Context, mg resource.Managed) error {
+func (b *bucketClient) Delete(ctx context.Context, mg resource.Managed) (managed.ExternalDelete, error) {
 	log := controllerruntime.LoggerFrom(ctx)
 	log.Info("deleting resource")
 
 	bucket, ok := mg.(*miniov1.Bucket)
 	if !ok {
-		return errNotBucket
+		return managed.ExternalDelete{}, errNotBucket
 	}
 
 	if hasDeleteAllPolicy(bucket) {
 		err := b.deleteAllObjects(ctx, bucket)
 		if err != nil {
-			return err
+			return managed.ExternalDelete{}, err
 		}
 	}
 
 	err := b.deleteS3Bucket(ctx, bucket)
 	if err != nil {
-		return err
+		return managed.ExternalDelete{}, err
 	}
 
 	b.emitDeletionEvent(bucket)
 
-	return nil
+	return managed.ExternalDelete{}, nil
 }
 func hasDeleteAllPolicy(bucket *miniov1.Bucket) bool {
 	return bucket.Spec.ForProvider.BucketDeletionPolicy == miniov1.DeleteAll
