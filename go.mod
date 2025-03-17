@@ -13,7 +13,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.63
 	github.com/minio/pkg v1.7.5
 	github.com/pkg/errors v0.9.1
-	github.com/sethvargo/go-password v0.2.0
+	github.com/sethvargo/go-password v0.3.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.25.7
 	go.uber.org/zap v1.27.0
