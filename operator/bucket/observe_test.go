@@ -9,6 +9,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/go-logr/logr"
 	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/lifecycle"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
@@ -17,11 +18,17 @@ import (
 
 func TestProvisioningPipeline_Observe(t *testing.T) {
 	policy := "policy-struct"
+	lifecycleRule := miniov1.LifecycleRules{
+		ID:                              "rule-1",
+		ExpirationDays:                  30,
+		NoncurrentVersionExpirationDays: 50,
+	}
 	tests := map[string]struct {
-		givenBucket  *miniov1.Bucket
-		bucketExists bool
-		returnError  error
-		policyLatest bool
+		givenBucket     *miniov1.Bucket
+		bucketExists    bool
+		returnError     error
+		policyLatest    bool
+		lifecycleLatest bool
 
 		expectedError             string
 		expectedResult            managed.ExternalObservation
@@ -37,6 +44,13 @@ func TestProvisioningPipeline_Observe(t *testing.T) {
 			givenBucket: &miniov1.Bucket{Spec: miniov1.BucketSpec{ForProvider: miniov1.BucketParameters{
 				BucketName: "my-bucket-with-policy",
 				Policy:     &policy}},
+			},
+			expectedResult: managed.ExternalObservation{},
+		},
+		"NewBucketWithLifecycleDoesntYetExistOnMinio": {
+			givenBucket: &miniov1.Bucket{Spec: miniov1.BucketSpec{ForProvider: miniov1.BucketParameters{
+				BucketName:     "my-bucket-with-lifecycle",
+				LifecycleRules: []miniov1.LifecycleRules{lifecycleRule}}},
 			},
 			expectedResult: managed.ExternalObservation{},
 		},
@@ -89,6 +103,19 @@ func TestProvisioningPipeline_Observe(t *testing.T) {
 			expectedResult: managed.ExternalObservation{},
 			expectedError:  "mismatching endpointURL and zone, or bucket exists already in a different region, try changing bucket name: 301 Moved Permanently",
 		},
+		"BucketLifecycleChangeRequired": {
+			givenBucket: &miniov1.Bucket{
+				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+					lockAnnotation: "claimed",
+				}},
+				Spec: miniov1.BucketSpec{ForProvider: miniov1.BucketParameters{
+					BucketName:     "my-bucket-with-lifecycle",
+					LifecycleRules: []miniov1.LifecycleRules{lifecycleRule}}},
+			},
+			bucketExists:              true,
+			expectedResult:            managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: false},
+			expectedBucketObservation: miniov1.BucketProviderStatus{BucketName: "my-bucket-with-lifecycle"},
+		},
 		"BucketPolicyNoChangeRequired": {
 			givenBucket: &miniov1.Bucket{
 				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
@@ -103,6 +130,20 @@ func TestProvisioningPipeline_Observe(t *testing.T) {
 			expectedResult:            managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true},
 			expectedBucketObservation: miniov1.BucketProviderStatus{BucketName: "my-bucket"},
 		},
+		"BucketLifecycleNoChangeRequired": {
+			givenBucket: &miniov1.Bucket{
+				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
+					lockAnnotation: "claimed",
+				}},
+				Spec: miniov1.BucketSpec{ForProvider: miniov1.BucketParameters{
+					BucketName:     "my-bucket-with-lifecycle",
+					LifecycleRules: []miniov1.LifecycleRules{lifecycleRule}}},
+			},
+			bucketExists:              true,
+			lifecycleLatest:           true,
+			expectedResult:            managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true},
+			expectedBucketObservation: miniov1.BucketProviderStatus{BucketName: "my-bucket-with-lifecycle"},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -113,6 +154,10 @@ func TestProvisioningPipeline_Observe(t *testing.T) {
 
 			bucketPolicyLatestFn = func(ctx context.Context, mc *minio.Client, bucketName string, policy string) (bool, error) {
 				return tc.policyLatest, tc.returnError
+			}
+
+			bucketLifecycleLatestFn = func(ctx context.Context, mc *minio.Client, bucketName string, lifecycleRules *lifecycle.Configuration) (bool, error) {
+				return tc.lifecycleLatest, tc.returnError
 			}
 
 			bucketExistsFn = func(ctx context.Context, mc *minio.Client, bucketName string) (bool, error) {
