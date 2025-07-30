@@ -1,0 +1,388 @@
+name: Merge
+
+on:
+  issue_comment:
+    types: [created]
+
+
+env:
+  APP_NAME: provider-minio
+  COMPONENT_REPO: vshn/component-appcat
+  APPCAT_REPO: vshn/appcat
+
+jobs:
+  check-conditions:
+    if: github.event.issue.pull_request && github.event.comment.body == '/merge'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+    outputs:
+      #appcat branch vars
+      is-hotfix: ${{ steps.appcat.outputs.is-hotfix }}
+      base-branch: ${{ steps.appcat.outputs.base-branch }}
+      feature-branch: ${{ steps.appcat.outputs.feature-branch }}
+      last-sha: ${{ steps.appcat.outputs.last-sha }}
+      pr-number: ${{ steps.appcat.outputs.pr-number }}
+      mergeable: ${{ steps.appcat.outputs.mergeable }}
+      approved: ${{ steps.appcat.outputs.approved }}
+      author: ${{ steps.appcat.outputs.author }}
+
+      #component branch vars
+      comp-pr-number: ${{ steps.component.outputs.pr-number }}
+      comp-url: ${{ steps.component.outputs.url }}
+      comp-feature-branch: ${{ steps.component.outputs.feature-branch }}
+      comp-last-sha: ${{ steps.component.outputs.last-sha }}
+      comp-mergeable: ${{ steps.component.outputs.mergeable }}
+      comp-approved: ${{ steps.component.outputs.approved }}
+    steps:
+      - name: Comment with workflow run link
+        run: |
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
+            -f body="🔗 [Workflow run triggered by this comment](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get appcat PR metadata
+        id: appcat
+        run: |
+          PR_NUMBER=${{ github.event.issue.number }}
+          PR_DATA=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json title,labels,baseRefName,headRefName,headRefOid,mergeable,reviews,author)
+
+          TITLE=$(echo "$PR_DATA" | jq -r '.title')
+          LABELS=$(echo "$PR_DATA" | jq -r '[.labels[].name]')
+          BASE=$(echo "$PR_DATA" | jq -r '.baseRefName')
+          BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
+          SHA=$(echo "$PR_DATA" | jq -r '.headRefOid')
+          MERGEABLE=$(echo "$PR_DATA" | jq -r '.mergeable')
+          APPROVED=$(echo "$PR_DATA" | jq -r '.reviews // [] | map(select(.state == "APPROVED")) | length')
+          AUTHOR=$(echo "$PR_DATA" | jq -r '.author.login')
+
+          # Check for hotfix in title or labels
+          if echo "$TITLE" | grep -i 'hotfix' > /dev/null || echo "$LABELS" | grep -i 'hotfix' > /dev/null; then
+            echo "is-hotfix=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is-hotfix=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "base-branch=$BASE" >> "$GITHUB_OUTPUT"
+          echo "feature-branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "last-sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "pr-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "mergeable=$MERGEABLE" >> "$GITHUB_OUTPUT"
+          echo "approved=$APPROVED" >> "$GITHUB_OUTPUT"
+          echo "author=$AUTHOR" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check approvals on appcat PR
+        run: |
+          APPROVED="${{ steps.appcat.outputs.approved }}"
+          if [ "$APPROVED" -eq 0 ]; then
+            echo "❌ PR in appcat is not approved"
+            exit 1
+          fi
+
+      - name: Check required status checks on appcat PR
+        run: |
+          PASSED=$(gh api repos/${{ github.repository }}/commits/${{ steps.appcat.outputs.last-sha }}/check-runs \
+            --jq '[.check_runs[].conclusion] | all(. == "success" or . == "skipped")')
+
+          if [ "$PASSED" != "true" ]; then
+            echo "❌ Required status checks did not pass"
+            exit 1
+          fi
+
+      - name: Check for merge conflicts on appcat PR
+        id: check-conflicts
+        run: |
+          MERGEABLE="${{ steps.appcat.outputs.mergeable }}"
+          if [ "$MERGEABLE" != "MERGEABLE" ]; then
+            echo "❌ Pull request has merge conflicts!"
+            exit 1
+          fi
+          echo "✅ Pull request is mergeable"
+
+      - name: Get component PR metadata
+        id: component
+        run: |
+          COMPONENT_BRANCH="appcat/${{ steps.appcat.outputs.pr-number }}/${{ steps.appcat.outputs.feature-branch }}"
+          PR_DATA=$(gh pr list --repo "$COMPONENT_REPO" --head "$COMPONENT_BRANCH" --state open --json number,headRefName,mergeable,url,reviews,headRefOid)
+          PR_NUMBER=$(echo "$PR_DATA" | jq -r '.[0].number')
+          PR_URL=$(echo "$PR_DATA" | jq -r '.[0].url')
+          SHA=$(echo "$PR_DATA" | jq -r '.[0].headRefOid')
+          MERGEABLE=$(echo "$PR_DATA" | jq -r '.[0].mergeable')
+          APPROVED=$(echo "$PR_DATA" | jq -r '.[0].reviews // [] | map(select(.state == "APPROVED")) | length')
+
+          echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "feature-branch=$COMPONENT_BRANCH" >> $GITHUB_OUTPUT
+          echo "last-sha=$SHA" >> $GITHUB_OUTPUT
+          echo "mergeable=$MERGEABLE" >> $GITHUB_OUTPUT
+          echo "approved=$APPROVED" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if component PR found
+        run: |
+          PR_NUMBER="${{ steps.component.outputs.pr-number }}"
+          if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" == "null" ]; then
+            echo "❌ No matching PR in component repo for branch $COMPONENT_BRANCH"
+            exit 1
+          fi
+
+      - name: Check required status checks on appcat PR
+        run: |
+          PASSED=$(gh api repos/$COMPONENT_REPO/commits/${{ steps.component.outputs.last-sha }}/check-runs \
+            --jq '[.check_runs[].conclusion] | all(. == "success" or . == "skipped")')
+
+          if [ "$PASSED" != "true" ]; then
+            echo "❌ Required status checks did not pass"
+            exit 1
+          fi
+
+      - name: Check for merge conflicts on component PR
+        run: |
+          MERGEABLE="${{ steps.component.outputs.mergeable }}"
+          if [ "$MERGEABLE" != "MERGEABLE" ]; then
+            echo "❌ PR in component is not mergeable: ${{ steps.component.outputs.url }}"
+            exit 1
+          fi
+
+      - name: Check if component PR is approved
+        run: |
+          APPROVED="${{ steps.component.outputs.approved }}"
+          if [ "$APPROVED" -eq 0 ]; then
+            echo "❌ Component PR not approved: ${{ steps.component.outputs.url }}"
+            exit 1
+          fi
+
+  merge-feature:
+    needs: check-conditions
+    if: needs.check-conditions.outputs.base-branch == 'develop' && needs.check-conditions.outputs.is-hotfix == 'false'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+    steps:
+      - name: Clone and patch component repo
+        run: |
+          COMPONENT_BRANCH="${{ needs.check-conditions.outputs.comp-feature-branch }}"
+          APPCAT_FR_COMMIT_SHA="${{ needs.check-conditions.outputs.last-sha }}"
+          echo "🔧 Using commit: $APPCAT_FR_COMMIT_SHA"
+          echo "🔧 Cloning branch: $COMPONENT_BRANCH"
+
+          git clone https://x-access-token:$GH_TOKEN@github.com/"$COMPONENT_REPO".git
+          cd component-appcat
+          git checkout "$COMPONENT_BRANCH"
+
+          echo "🔧 Patching class/defaults.yml..."
+          yq e ".parameters.appcat.images.appcat.tag = \"$APPCAT_FR_COMMIT_SHA\"" class/defaults.yml \
+            | diff -B class/defaults.yml - \
+            | patch class/defaults.yml - || echo "✅ No patch needed"
+
+          make gen-golden-all
+
+          git config --global user.email "githubbot@vshn.ch"
+          git config --global user.name "GitHubBot"
+
+          git add .
+          if git diff --cached --quiet; then
+            echo "✅ No changes to commit"
+          else
+            git commit -m "Auto update from appcat PR #${{ needs.check-conditions.outputs.pr-number }}, dependency $APPCAT_FR_COMMIT_SHA"
+            git push origin "$COMPONENT_BRANCH"
+          fi
+
+      - name: Retry mergeable check
+        run: |
+          for i in {1..5}; do
+            MERGEABLE=$(gh pr view ${{ needs.check-conditions.outputs.comp-pr-number }} --repo "$COMPONENT_REPO" --json mergeable -q .mergeable)
+            echo "Mergeable state: $MERGEABLE"
+            if [ "$MERGEABLE" == "MERGEABLE" ]; then
+              break
+            fi
+            echo "🔁 Waiting for GitHub to refresh mergeability..."
+            sleep 3
+          done
+
+      - name: Merge PR in component repo
+        run: |
+          echo "✅ Merging component PR: ${{ needs.check-conditions.outputs.comp-url }}"
+          gh pr merge -R "$COMPONENT_REPO" ${{ needs.check-conditions.outputs.comp-pr-number }} --merge --delete-branch
+
+      - name: Merge PR in appcat repo
+        run: |
+          echo "✅ Merging appcat PR: https://github.com/$APPCAT_REPO/pull/${{ needs.check-conditions.outputs.pr-number }}"
+          gh pr merge -R "$APPCAT_REPO" ${{ needs.check-conditions.outputs.pr-number }} --merge --delete-branch
+
+  merge-hotfix:
+    needs: check-conditions
+    if: needs.check-conditions.outputs.base-branch == 'master' && needs.check-conditions.outputs.is-hotfix == 'true'
+    runs-on: ubuntu-latest
+    env:
+      APPCAT_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      COMPONENT_GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+    steps:
+      - name: Merge PR in appcat repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "✅ Merging appcat PR: https://github.com/$APPCAT_REPO/pull/${{ needs.check-conditions.outputs.pr-number }}"
+          gh pr merge -R "$APPCAT_REPO" ${{ needs.check-conditions.outputs.pr-number }} --merge --delete-branch
+
+      - name: Auto-increment patch version and tag master
+        id: tag
+        run: |
+          git config --global user.email "githubbot@vshn.ch"
+          git config --global user.name "GitHubBot"
+          
+          git clone --quiet https://x-access-token:$APPCAT_GH_TOKEN@github.com/$APPCAT_REPO.git
+          cd appcat
+          git fetch --tags
+          
+          # Get the latest tag (assumes tags are in 'vX.Y.Z' format)
+          LATEST_TAG=$(git tag --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found."
+            exit 1
+          else
+            echo "Latest tag: $LATEST_TAG"
+            MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1 | sed 's/v//')
+            MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+            PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
+            PATCH=$((PATCH + 1))
+            NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+          fi
+          
+          git checkout master
+          git tag "$NEW_TAG"
+          git push origin "$NEW_TAG"
+          echo "✅ Created and pushed tag: $NEW_TAG"
+          echo "appcat-tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Clone and patch component repo
+        run: |
+          COMPONENT_BRANCH="${{ needs.check-conditions.outputs.comp-feature-branch }}"
+          APPCAT_NEW_TAG="${{ steps.tag.outputs.appcat-tag }}"
+          echo "🔧 Using tag: $APPCAT_NEW_TAG"
+          echo "🔧 Cloning branch: $COMPONENT_BRANCH"
+
+          git clone https://x-access-token:$COMPONENT_GH_TOKEN@github.com/"$COMPONENT_REPO".git
+          cd component-appcat
+          git checkout "$COMPONENT_BRANCH"
+
+          echo "🔧 Patching class/defaults.yml..."
+          yq e ".parameters.appcat.images.appcat.tag = \"$APPCAT_NEW_TAG\"" class/defaults.yml \
+            | diff -B class/defaults.yml - \
+            | patch class/defaults.yml - || echo "✅ No patch needed"
+
+          make gen-golden-all
+
+          git config --global user.email "githubbot@vshn.ch"
+          git config --global user.name "GitHubBot"
+
+          git add .
+          if git diff --cached --quiet; then
+            echo "✅ No changes to commit"
+          else
+            git commit -m "Auto update from appcat PR #${{ needs.check-conditions.outputs.pr-number }}, dependency $APPCAT_NEW_TAG"
+            git push origin "$COMPONENT_BRANCH"
+          fi
+
+      - name: Retry mergeable check
+        env:
+          GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+        run: |
+          for i in {1..5}; do
+            MERGEABLE=$(gh pr view ${{ needs.check-conditions.outputs.comp-pr-number }} --repo "$COMPONENT_REPO" --json mergeable -q .mergeable)
+            echo "Mergeable state: $MERGEABLE"
+            if [ "$MERGEABLE" == "MERGEABLE" ]; then
+              break
+            fi
+            echo "🔁 Waiting for GitHub to refresh mergeability..."
+            sleep 3
+          done
+
+      - name: Merge PR in component repo
+        env:
+          GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+        run: |
+          echo "✅ Merging component PR: ${{ needs.check-conditions.outputs.comp-url }}"
+          gh pr merge -R "$COMPONENT_REPO" ${{ needs.check-conditions.outputs.comp-pr-number }} --merge --delete-branch
+
+  merge-hotfix-update-develop:
+    needs: merge-hotfix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create PR to merge master into develop in appcat repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --repo "$APPCAT_REPO" \
+            --base develop \
+            --head master \
+            --reviewer ${{ needs.check-conditions.outputs.author }} \ \
+            --title "🔀 Merge master into develop (sync hotfixes)" \
+            --body "This PR synchronizes the hotfixes from master back into develop." || true
+
+      - name: Create PR to merge master into develop in component repo
+        env:
+          GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+        run: |
+          gh pr create \
+            --repo "$COMPONENT_REPO" \
+            --base develop \
+            --head master \
+            --reviewer ${{ needs.check-conditions.outputs.author }} \ \
+            --title "🔀 Merge master into develop (sync hotfixes)" \
+            --body "This PR synchronizes the hotfixes from master back into develop." || true
+
+      - name: Check if master→develop PR is mergeable in appcat repo
+        id: check_mergeable_appcat
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_JSON=$(gh pr list --repo "$APPCAT_REPO" --head master --base develop --state open --json number,mergeable)
+          PR_NUMBER=$(echo "$PR_JSON" | jq -r '.[0].number')
+          MERGEABLE=$(echo "$PR_JSON" | jq -r '.[0].mergeable')
+
+          if [ "$MERGEABLE" != "MERGEABLE" ]; then
+            echo "❌ PR #$PR_NUMBER is not mergeable (conflicts or unknown)."
+            exit 1
+          fi
+
+          echo "✅ PR #$PR_NUMBER is mergeable."
+          echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Check if master→develop PR is mergeable in component repo
+        id: check_mergeable_component
+        env:
+          GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+        run: |
+          PR_JSON=$(gh pr list --repo "$COMPONENT_REPO" --head master --base develop --state open --json number,mergeable)
+          PR_NUMBER=$(echo "$PR_JSON" | jq -r '.[0].number')
+          MERGEABLE=$(echo "$PR_JSON" | jq -r '.[0].mergeable')
+
+          if [ "$MERGEABLE" != "MERGEABLE" ]; then
+            echo "❌ PR #$PR_NUMBER is not mergeable (conflicts or unknown)."
+            exit 1
+          fi
+
+          echo "✅ PR #$PR_NUMBER is mergeable."
+          echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Merge PR in appcat repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "✅ Merging appcat PR: https://github.com/$APPCAT_REPO/pull/${{ steps.check_mergeable_appcat.outputs.pr-number }}"
+          gh pr merge -R "$APPCAT_REPO" ${{ needs.check-conditions.outputs.pr-number }} --merge
+
+      - name: Merge PR in component repo
+        env:
+          GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+        run: |
+          echo "✅ Merging component PR: https://github.com/$COMPONENT_REPO/pull/${{ steps.check_mergeable_component.outputs.pr-number }}"
+          gh pr merge -R "$COMPONENT_REPO" ${{ steps.check_mergeable_component.outputs.pr-number }} --merge
+

@@ -32,5 +32,8 @@
       ]
     }
   ],
-  "template": "${{CATEGORIZED_COUNT}} changes since ${{FROM_TAG}}\n\n${{CHANGELOG}}"
+  "template": "${{CATEGORIZED_COUNT}} changes since ${{FROM_TAG}}\n\n${{CHANGELOG}}",
+  "ignore_labels": [
+    "ignoreChangelog"
+  ]
 }

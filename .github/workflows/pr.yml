@@ -16,21 +16,45 @@ env:
   PUSH_IMAGE: "False"
 
 jobs:
+  check-allow-merge:
+    if: github.event.pull_request.base.ref != 'develop' || github.event.pull_request.head.ref != 'master'
+    runs-on: ubuntu-latest
+    steps:
+      # Labels in the context don't get updated so they are stuck at what's set during creation
+      # We need this action to get current labels
+      - name: Get current labels
+        uses: snnaplab/get-labels-action@v1
+      - name: Check if merge is allowed
+        if: github.base_ref == 'master' && github.head_ref != 'develop'
+        run: |
+          ${{ contains(fromJSON(env.LABELS), 'hotfix') }} && exit 0
+          echo "ERROR: You can only merge to master from develop or hotfixes."
+          exit 1
+
   check-labels:
     # Act doesn't set a pull request number by default, so we skip if it's 0
-    if: github.event.pull_request.number != 0
+    if: github.event.pull_request.number != 0 && (github.event.pull_request.base.ref != 'develop' || github.event.pull_request.head.ref != 'master')
     name: Check labels
     runs-on: ubuntu-latest
     steps:
+      - name: Ignore from Changelog if merge to master
+        uses: actions-ecosystem/action-add-labels@v1
+        if: github.event.action != 'opened' && github.base_ref == 'master'
+        with:
+          labels: ignoreChangelog
+
       - uses: docker://agilepathway/pull-request-label-checker:v1.6.51
         with:
           one_of: major,minor,patch,documentation,dependency
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+
   publish-branch-images:
-    if: github.event.action != 'closed'
+    if: github.event.action != 'closed' && (github.event.pull_request.base.ref != 'develop' || github.event.pull_request.head.ref != 'master')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Determine Go version from go.mod
         run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
@@ -60,11 +84,15 @@ jobs:
 
       - name: Build branch and push image
         if: env.PUSH_IMAGE == 'true'
-        run: make docker-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}"
+        run: |
+          make docker-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}"
+          make docker-push-branchtag -e IMG_TAG="${{ github.event.pull_request.head.sha }}"
 
       - name: Build branch and push package
         if: env.PUSH_PACKAGE == 'True'
-        run: make package-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}"
+        run: |
+          make package-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}"
+          make package-push-branchtag -e IMG_TAG="${{ github.event.pull_request.head.sha }}"
 
       - name: Login to Upbound
         if: env.PUSH_UPBOUND == 'true'
@@ -79,14 +107,18 @@ jobs:
         run: make package-push-branchtag -e IMG_TAG="${{ steps.extract_branch.outputs.branch }}" -e IMG_REPO=xpkg.upbound.io
 
   open-pr-component:
-    if: github.event.action == 'opened'
     runs-on: ubuntu-latest
+    if: github.event.pull_request.number != 0 && github.event.action == 'opened' && (github.event.pull_request.base.ref != 'develop' || github.event.pull_request.head.ref != 'master')
     steps:
+      - name: Get current labels
+        uses: snnaplab/get-labels-action@v1
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           repository: ${{ env.COMPONENT_REPO }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Extract branch name
         shell: bash
@@ -102,116 +134,39 @@ jobs:
       - name: Generate new golden
         # Act uses the host's docker to run containers, but then
         # they can't access the files that were previously cloned.
-        if: github.event.pull_request.number != 0
+        if: github.event.pull_request.number != 0 && github.event.action == 'opened'
         run: |
           make gen-golden-all
+
+      - name: Check if it's a hotfix
+        id: hotfix_check
+        run: |
+          ${{ contains(fromJSON(env.LABELS), 'hotfix') }} && echo "base=master" >> $GITHUB_OUTPUT || echo "base=develop" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
+        id: cpr
         with:
           token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
-          title: 'PR for ${{ env.APP_NAME }} on ${{ steps.extract_branch.outputs.branch }}'
+          title: ${{ github.event.pull_request.title }}
           body: "${{ github.event.pull_request.body}}\nLink: ${{ github.event.pull_request.html_url }}"
           branch: "${{ env.APP_NAME }}/${{ github.event.pull_request.number }}/${{ steps.extract_branch.outputs.branch }}"
-          base: master
+          base: ${{ steps.hotfix_check.outputs.base }}
           draft: false
-  create-release:
-    if: github.event.pull_request.merged
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check for patch label
-        if: contains(github.event.pull_request.labels.*.name, 'patch') || contains(github.event.pull_request.labels.*.name, 'dependency') || contains(github.event.pull_request.labels.*.name, 'documentation')
-        id: patch
-        run: |
-          echo "set=true" >> $GITHUB_OUTPUT
-      - name: Check for minor label
-        if: contains(github.event.pull_request.labels.*.name, 'minor')
-        id: minor
-        run: |
-          echo "set=true" >> $GITHUB_OUTPUT
-      - name: Check for major label
-        if: contains(github.event.pull_request.labels.*.name, 'major')
-        id: major
-        run: |
-          echo "set=true" >> $GITHUB_OUTPUT
 
-      - uses: actions/checkout@v4
+      - name: Add link to component PR
+        uses: tzkhan/pr-update-action@v2
         with:
-          # Make sure we use the right commit to tag
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
-          # We also need to use the personal access token here. As subsequent
-          # actions will not trigger by tags/pushes that use `GITHUB_TOKEN`
-          # https://github.com/orgs/community/discussions/25702#discussioncomment-3248819
-          token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
-          # This is broken in checkout@v4...
-          # https://github.com/actions/checkout/issues/1781
-          fetch-tags: true
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          head-branch-regex: "${{ steps.extract_branch.outputs.branch }}"
+          body-template: |
+            Component PR: ${{ steps.cpr.outputs.pull-request-url }}
+          body-update-action: 'suffix'
+          body-uppercase-base-match: false
 
-      - name: fetch tags
-        run: |
-          git fetch --tags
-          echo "latest tag: $(git describe --tags "$(git rev-list --tags --max-count=1)")"
-          echo "TAG_VERSION=$(git describe --tags "$(git rev-list --tags --max-count=1)")" >>  $GITHUB_ENV
-
-      - name: Extract branch name
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-        id: extract_branch
-
-      # We only run this if any of the release tags is set.
-      # For docs and deps we don't do automagic releases
-      - name: Increase Tag
-        id: tag
-        run: |
-          patch=${{ steps.patch.outputs.set }}
-          minor=${{ steps.minor.outputs.set }}
-          major=${{ steps.major.outputs.set }}
-
-          major_ver=$(echo '${{ env.TAG_VERSION }}' | cut -d "." -f1)
-          minor_ver=$(echo '${{ env.TAG_VERSION }}' | cut -d "." -f2)
-          patch_ver=$(echo '${{ env.TAG_VERSION }}' | cut -d "." -f3)
-
-          major_ver="${major_ver:1}"
-
-          # Check for patch label
-          [ ! -z "$patch" ] && [ -z "$minor" ] && [ -z "$major" ] && ((patch_ver++)) || true
-
-          # check for minor label
-          if [ ! -z "$minor" ] && [ -z "$major" ]; then
-            ((minor_ver++))
-            patch_ver=0
-          fi
-
-          # Check for major label
-          if [ ! -z "$major" ]; then
-            ((major_ver++))
-            minor_ver=0
-            patch_ver=0
-          fi
-
-          tag="v$major_ver.$minor_ver.$patch_ver"
-          echo "new tag $tag"
-          git tag $tag
-          git push --tags
-          echo tag=$tag >> $GITHUB_OUTPUT
-
-      - name: Checkout component
-        uses: actions/checkout@v4
+      - name: Ignore from Changelog if merge to master
+        uses: actions-ecosystem/action-add-labels@v1
+        if: github.base_ref == 'master'
         with:
-          repository: ${{ env.COMPONENT_REPO }}
-          token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
-          ref: "${{ env.APP_NAME }}/${{ github.event.pull_request.number }}/${{ steps.extract_branch.outputs.branch }}"
-
-      - name: Update tag and run golden
-        run: |
-          yq e '.parameters.appcat.images.${{ env.APP_NAME }}.tag="${{ steps.tag.outputs.tag }}"' class/defaults.yml | diff -B class/defaults.yml - | patch class/defaults.yml - || true
-          make gen-golden-all
-
-      - name: Commit & Push changes
-        uses: actions-js/push@master
-        with:
-          github_token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
-          branch: "${{ env.APP_NAME }}/${{ github.event.pull_request.number }}/${{ steps.extract_branch.outputs.branch }}"
-          message: "Update tag"
-          repository: ${{ env.COMPONENT_REPO }}
+          labels: ignoreChangelog
 
