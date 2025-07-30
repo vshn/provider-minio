@@ -1,0 +1,142 @@
+name: Pre Release
+
+on:
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  APP_NAME: provider-minio
+  COMPONENT_REPO: vshn/component-appcat
+  APPCAT_REPO: vshn/appcat
+
+jobs:
+  create-and-merge-appcat-pr:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Create PR from develop to master
+        id: create_pr
+        run: |
+          gh pr create \
+            --repo $APPCAT_REPO \
+            --base master \
+            --head develop \
+            --title "🔀 Merge develop into master (Release)" \
+            --body "Auto-generated PR to release from develop to master." \
+            || echo "PR already exists or failed"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get PR ID
+        id: pr_info
+        run: |
+          PR_JSON=$(gh pr list --repo $APPCAT_REPO --head develop --base master --state open --json number)
+          echo "pr_number=$(echo $PR_JSON | jq -r '.[0].number')" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Retry mergeable check
+        id: pr_mergeable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in {1..100}; do
+            MERGEABLE=$(gh pr view ${{ steps.pr_info.outputs.pr_number }} --repo "$APPCAT_REPO" --json mergeable -q .mergeable)
+            echo "Mergeable state: $MERGEABLE"
+            if [ "$MERGEABLE" == "MERGEABLE" ]; then
+              break
+            fi
+            echo "🔁 Waiting for GitHub to refresh mergeability..."
+            sleep 5
+          done
+          echo "mergeable=$MERGEABLE" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if not mergeable
+        if: steps.pr_mergeable.outputs.mergeable != 'MERGEABLE'
+        run: |
+          echo "PR #${{ steps.pr_info.outputs.pr_number }} is not mergeable!"
+          exit 1
+
+      - name: Merge PR
+        run: gh pr merge ${{ steps.pr_info.outputs.pr_number }} --merge --admin
+        env:
+          GH_TOKEN: ${{ secrets.MERGE_TOKEN }}
+
+      - name: Bump minor version and tag
+        id: bump
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1)
+          MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+          NEW_TAG="$MAJOR.$((MINOR + 1)).0"
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fast forward develop to master
+        run: |
+          git checkout develop
+          git merge master --ff-only
+          git push origin develop
+        env:
+          GH_TOKEN: ${{ secrets.MERGE_TOKEN }}
+
+  create-component-release-pr:
+    needs: create-and-merge-appcat-pr
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+    steps:
+      - name: Clone component repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.COMPONENT_REPO }}
+          token: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+          ref: develop
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Update version in class/defaults.yaml
+        run: |
+          echo "🔧 Patching class/defaults.yml..."
+          TAG="${{ needs.create-and-merge-appcat-pr.outputs.new_tag }}"
+          yq e ".parameters.appcat.images.appcat.tag = \"$TAG\"" class/defaults.yml \
+          | diff -B class/defaults.yml - \
+          | patch class/defaults.yml - || echo "✅ No patch needed"
+
+      - name: Run make gen-golden-all
+        run: make gen-golden-all
+
+      - name: Commit and push changes
+        run: |
+          git add .
+          git commit -m "Update version to ${{ needs.create-and-merge-appcat-pr.outputs.new_tag }}"
+          git push origin develop
+
+      - name: Create PR in component repo
+        run: |
+          gh pr create \
+            --repo "$COMPONENT_REPO" \
+            --base master \
+            --head develop \
+            --title "⬆️ Update appcat version to ${{ needs.create-and-merge-appcat-pr.outputs.new_tag }}" \
+            --body "This PR updates the version in defaults.yaml and regenerates golden files."
+        env:
+          GH_TOKEN: ${{ secrets.COMPONENT_ACCESS_TOKEN }}
+

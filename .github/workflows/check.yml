@@ -1,0 +1,43 @@
+name: Check
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Every day at 07:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-develop-ahead:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if develop contains all commits from master
+        run: |
+          if [ -n "$(git rev-list origin/master ^origin/develop)" ]; then
+            echo "❌ develop is missing commits from master:"
+            git log origin/develop..origin/master --oneline
+            exit 1
+          else
+            echo "✅ develop includes all commits from master"
+          fi
+
+      - name: Notify Rocket.Chat if develop is behind
+        if: failure()
+        run: |
+          curl -X POST "$ROCKETCHAT_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"text\": \"🚨 *develop is behind master* in \`${{ github.repository }}\`\n🔁 Please merge \`master\` into \`develop\` to stay in sync.\",
+              \"attachments\": [{
+                \"title\": \"GitHub Workflow: ${{ github.workflow }}\",
+                \"title_link\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\",
+                \"text\": \"Triggered by: ${{ github.actor }}\",
+                \"color\": \"#ff0000\"
+              }]
+            }"
+        env:
+          ROCKETCHAT_WEBHOOK_URL: ${{ secrets.ROCKETCHAT_WEBHOOK_URL }}
+
