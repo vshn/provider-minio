@@ -7,6 +7,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/lifecycle"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
@@ -29,6 +30,28 @@ func (b *bucketClient) Create(ctx context.Context, mg resource.Managed) (managed
 		err = b.mc.SetBucketPolicy(ctx, bucket.GetBucketName(), *bucket.Spec.ForProvider.Policy)
 		if err != nil {
 			return managed.ExternalCreation{}, err
+		}
+	}
+
+	if bucket.Spec.ForProvider.LifecycleRules != nil {
+		lifecycleConfiguration := lifecycle.NewConfiguration()
+		for _, rule := range bucket.Spec.ForProvider.LifecycleRules {
+			lifecycleRule := lifecycle.Rule{
+				ID: rule.ID,
+				Expiration: lifecycle.Expiration{
+					Days: lifecycle.ExpirationDays(rule.ExpirationDays),
+				},
+				NoncurrentVersionExpiration: lifecycle.NoncurrentVersionExpiration{
+					NoncurrentDays: lifecycle.ExpirationDays(rule.NoncurrentVersionExpirationDays),
+				},
+				Status: "Enabled",
+			}
+			lifecycleConfiguration.Rules = append(lifecycleConfiguration.Rules, lifecycleRule)
+
+			err = b.mc.SetBucketLifecycle(ctx, bucket.GetBucketName(), lifecycleConfiguration)
+			if err != nil {
+				return managed.ExternalCreation{}, err
+			}
 		}
 	}
 

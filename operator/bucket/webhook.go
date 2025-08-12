@@ -30,6 +30,13 @@ func (v *Validator) ValidateCreate(_ context.Context, obj runtime.Object) (admis
 	if providerConfigRef == nil || providerConfigRef.Name == "" {
 		return nil, fmt.Errorf(".spec.providerConfigRef.name is required")
 	}
+	if bucket.Spec.ForProvider.LifecycleRules != nil {
+		for _, rule := range bucket.Spec.ForProvider.LifecycleRules {
+			if rule.ExpirationDays <= 0 && rule.NoncurrentVersionExpirationDays <= 0 {
+				return nil, field.Invalid(field.NewPath("spec", "forProvider", "lifecycleRules"), rule, "Either ExpirationDays or NoncurrentVersionExpirationDays must be declared and both can't be 0")
+			}
+		}
+	}
 	return nil, nil
 }
 
@@ -50,6 +57,13 @@ func (v *Validator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Obj
 	providerConfigRef := newBucket.Spec.ProviderConfigReference
 	if providerConfigRef == nil || providerConfigRef.Name == "" {
 		return nil, field.Invalid(field.NewPath("spec", "providerConfigRef", "name"), "null", "Provider config is required")
+	}
+	if newBucket.Spec.ForProvider.LifecycleRules != nil {
+		for _, rule := range newBucket.Spec.ForProvider.LifecycleRules {
+			if rule.ExpirationDays <= 0 && rule.NoncurrentVersionExpirationDays <= 0 {
+				return nil, field.Invalid(field.NewPath("spec", "forProvider", "lifecycleRules"), rule, "Either ExpirationDays or NoncurrentVersionExpirationDays must be declared and both can't be 0")
+			}
+		}
 	}
 	return nil, nil
 }

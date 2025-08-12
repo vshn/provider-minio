@@ -84,6 +84,21 @@ type BucketParameters struct {
 	// Policy is a raw S3 bucket policy.
 	// Please consult https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html for more details about the policy.
 	Policy *string `json:"policy,omitempty"`
+
+	// Bucket lifecycle rules.
+	// Please consult https://min.io/docs/minio/linux/administration/object-management/object-lifecycle-management.html for more details about object lifecycle management.
+	LifecycleRules []LifecycleRules `json:"lifecycleRules,omitempty"`
+}
+
+type LifecycleRules struct {
+	// ID is the unique identifier for the rule.
+	ID string `json:"id,omitempty"`
+
+	// ExpirationDays is the number of days after which the object expires.
+	ExpirationDays int `json:"expirationDays,omitempty"`
+
+	// NoncurrentVersionExpirationDays is the number of days after which the noncurrent versions expire.
+	NoncurrentVersionExpirationDays int `json:"noncurrentVersionExpirationDays,omitempty"`
 }
 
 type BucketProviderStatus struct {
