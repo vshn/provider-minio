@@ -2,6 +2,7 @@ package bucket
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
@@ -43,7 +44,6 @@ func (b *bucketClient) Create(ctx context.Context, mg resource.Managed) (managed
 func (b *bucketClient) createS3Bucket(ctx context.Context, bucket *miniov1.Bucket) error {
 	bucketName := bucket.GetBucketName()
 	err := b.mc.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: bucket.Spec.ForProvider.Region})
-
 	if err != nil {
 		// Check to see if we already own this bucket (which happens if we run this twice)
 		exists, errBucketExists := b.mc.BucketExists(ctx, bucketName)
@@ -54,6 +54,16 @@ func (b *bucketClient) createS3Bucket(ctx context.Context, bucket *miniov1.Bucke
 		return err
 
 	}
+
+	// Encryption
+	if do, sseConfig, err := createSseConfig(bucket); err != nil {
+		return err
+	} else if do {
+		if err := b.mc.SetBucketEncryption(ctx, bucketName, &sseConfig); err != nil {
+			return fmt.Errorf("failed setting up encryption: %w", err)
+		}
+	}
+
 	return nil
 }
 

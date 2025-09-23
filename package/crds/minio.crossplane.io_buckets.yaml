@@ -93,6 +93,21 @@ spec:
                       Name must be acceptable by the S3 protocol, which follows RFC 1123.
                       Be aware that S3 providers may require a unique name across the platform or zone.
                     type: string
+                  encryption:
+                    description: Encryption sets up encryption for this bucket.
+                    properties:
+                      encType:
+                        default: none
+                        description: Encryption type
+                        enum:
+                        - none,sse-s3,sse-kms
+                        type: string
+                      kmsKeyID:
+                        description: KMS key ID, required if encType is "sse-kms"
+                        type: string
+                    required:
+                    - encType
+                    type: object
                   policy:
                     description: |-
                       Policy is a raw S3 bucket policy.

@@ -30,6 +30,14 @@ func (v *Validator) ValidateCreate(_ context.Context, obj runtime.Object) (admis
 	if providerConfigRef == nil || providerConfigRef.Name == "" {
 		return nil, fmt.Errorf(".spec.providerConfigRef.name is required")
 	}
+
+	encSpec := bucket.Spec.ForProvider.Encryption
+	if encSpec.Type == "sse-kms" && encSpec.KmsId == "" {
+		return nil, field.Invalid(
+			field.NewPath("spec", "forProvider", "encryption", "kmsId"),
+			encSpec.KmsId, "Must provide a KMS key ID if encryption type is set to 'sse-kms'",
+		)
+	}
 	return nil, nil
 }
 
@@ -38,6 +46,14 @@ func (v *Validator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Obj
 	newBucket := newObj.(*miniov1.Bucket)
 	oldBucket := oldObj.(*miniov1.Bucket)
 	v.log.V(1).Info("Validate update")
+
+	encSpec := newBucket.Spec.ForProvider.Encryption
+	if encSpec.Type == "sse-kms" && encSpec.KmsId == "" {
+		return nil, field.Invalid(
+			field.NewPath("spec", "forProvider", "encryption", "kmsId"),
+			encSpec.KmsId, "Must provide a KMS key ID if encryption type is set to 'sse-kms'",
+		)
+	}
 
 	if oldBucket.Status.AtProvider.BucketName != "" {
 		if newBucket.GetBucketName() != oldBucket.Status.AtProvider.BucketName {

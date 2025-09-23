@@ -5,6 +5,8 @@ metadata:
   name: bucket-local-dev
 spec:
   forProvider:
+    encryption:
+      encType: ""
     region: us-east-1
   providerConfigRef:
     name: provider-config

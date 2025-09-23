@@ -67,6 +67,9 @@ type BucketParameters struct {
 	// Be aware that S3 providers may require a unique name across the platform or zone.
 	BucketName string `json:"bucketName,omitempty"`
 
+	// Encryption sets up encryption for this bucket.
+	Encryption BucketEncryption `json:"encryption,omitempty"`
+
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default="us-east-1"
 
@@ -84,6 +87,17 @@ type BucketParameters struct {
 	// Policy is a raw S3 bucket policy.
 	// Please consult https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html for more details about the policy.
 	Policy *string `json:"policy,omitempty"`
+}
+
+type BucketEncryption struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum="none,sse-s3,sse-kms"
+	// +kubebuilder:default="none"
+
+	// Encryption type
+	Type string `json:"encType"`
+	// KMS key ID, required if encType is "sse-kms"
+	KmsId string `json:"kmsKeyID,omitempty"`
 }
 
 type BucketProviderStatus struct {
