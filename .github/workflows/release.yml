@@ -50,11 +50,11 @@ jobs:
 
       - name: Push docker image
         if: env.PUSH_IMAGE == 'true'
-        run: make docker-push -e IMG_TAG=${GITHUB_REF##*/} -e APP_NAME=${{ env.APP_NAME }}
+        run: make docker-push -e IMG_TAG=${GITHUB_REF##*/} -e APP_NAME=${{ env.APP_NAME }} -e ORG=${{ github.repository_owner }}
 
       - name: Build and push function package
         if: env.PUSH_PACKAGE == 'true'
-        run: make package-push -e IMG_TAG=${GITHUB_REF##*/} -e APP_NAME=${{ env.APP_NAME }}
+        run: make package-push -e IMG_TAG=${GITHUB_REF##*/} -e APP_NAME=${{ env.APP_NAME }} -e ORG=${{ github.repository_owner }}
 
       - name: Login to Upbound
         if: env.PUSH_UPBOUND == 'true'
