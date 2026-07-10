@@ -11,14 +11,28 @@ UPBOUND_CONTAINER_REGISTRY ?= xpkg.upbound.io
 UPBOUND_PACKAGE_IMG ?= $(UPBOUND_CONTAINER_REGISTRY)/$(ORG)/$(APP_NAME):$(IMG_TAG)
 
 # For alpine image it is required the following env before building the application
+# DOCKER_IMAGE_GOARCH is a space-separated list; one runtime image is built per
+# architecture and the package is pushed as a multi-arch index.
 DOCKER_IMAGE_GOOS = linux
-DOCKER_IMAGE_GOARCH = amd64
+DOCKER_IMAGE_GOARCH ?= amd64 arm64
+
+# Comma-join helper for crank's -f flag
+empty :=
+space := $(empty) $(empty)
+comma := ,
+XPKG_FILES = $(patsubst %,package/package-%.xpkg,$(DOCKER_IMAGE_GOARCH))
 
 .PHONY: docker-build
 docker-build:
-	env CGO_ENABLED=0 GOOS=$(DOCKER_IMAGE_GOOS) GOARCH=$(DOCKER_IMAGE_GOARCH) \
-		go build -o ${BIN_FILENAME}
-	docker build --platform $(DOCKER_IMAGE_GOOS)/$(DOCKER_IMAGE_GOARCH) -t ${IMG} .
+	@for arch in $(DOCKER_IMAGE_GOARCH); do \
+		env CGO_ENABLED=0 GOOS=$(DOCKER_IMAGE_GOOS) GOARCH=$$arch \
+			go build -o ${BIN_FILENAME} && \
+		$(DOCKER_CMD) build --platform $(DOCKER_IMAGE_GOOS)/$$arch -t ${IMG}-$$arch . \
+		|| exit 1; \
+	done
+	@# Keep the un-suffixed tag for single-image consumers (kind-load-image);
+	@# points at the first architecture in the list (amd64 by default).
+	$(DOCKER_CMD) tag ${IMG}-$(firstword $(DOCKER_IMAGE_GOARCH)) ${IMG}
 
 .PHONY: docker-build-branchtag
 docker-build-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD | sed 's/\//_/g')
@@ -26,7 +40,7 @@ docker-build-branchtag: docker-build ## Build docker image with current branch n
 
 .PHONY: docker-push
 docker-push: docker-build ## Push docker image with the manager.
-	docker push ${IMG}
+	$(DOCKER_CMD) push ${IMG}
 
 .PHONY: docker-push-branchtag
 docker-push-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD | sed 's/\//_/g')
@@ -35,11 +49,14 @@ docker-push-branchtag: docker-build-branchtag docker-push ## Push docker image w
 .PHONY: package-build
 package-build: docker-build
 	rm -f package/*.xpkg
-	go run github.com/crossplane/crossplane/cmd/crank@v1.16.0 xpkg build -f package --verbose --embed-runtime-image=${IMG} -o package/package.xpkg
+	@for arch in $(DOCKER_IMAGE_GOARCH); do \
+		go run github.com/crossplane/crossplane/cmd/crank@v1.16.0 xpkg build -f package --verbose --embed-runtime-image=${IMG}-$$arch -o package/package-$$arch.xpkg \
+		|| exit 1; \
+	done
 
 .PHONY: package-push
 package-push: package-build
-	go run github.com/crossplane/crossplane/cmd/crank@v1.16.0 xpkg push -f package/package.xpkg ${IMG} --verbose
+	go run github.com/crossplane/crossplane/cmd/crank@v1.16.0 xpkg push -f $(subst $(space),$(comma),$(XPKG_FILES)) ${IMG} --verbose
 
 .PHONY: package-build-branchtag
 package-build-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD | sed 's/\//_/g')
