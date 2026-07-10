@@ -7,14 +7,17 @@ on:
 
 env:
   APP_NAME: provider-minio
-  PUSH_UPBOUND: "True"
-  PUSH_PACKAGE: "True"
-  PUSH_IMAGE: "False"
+  PUSH_UPBOUND: "true"
+  PUSH_PACKAGE: "true"
+  PUSH_IMAGE: "false"
   SUFFIX: "/controller"
 
 jobs:
   dist:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # goreleaser needs this to publish GitHub releases
+      packages: write   # crank xpkg push and docker login need this for GHCR
     steps:
 
       - uses: actions/checkout@v4

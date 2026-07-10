@@ -40,7 +40,7 @@ docker-build-branchtag: docker-build ## Build docker image with current branch n
 
 .PHONY: docker-push
 docker-push: docker-build ## Push docker image with the manager.
-	docker push ${IMG}
+	$(DOCKER_CMD) push ${IMG}
 
 .PHONY: docker-push-branchtag
 docker-push-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD | sed 's/\//_/g')
