@@ -11,8 +11,8 @@ content:
       start_path: docs
 ui:
   bundle:
-    url: https://github.com/vshn/antora-ui-default/releases/download/2.0.15/ui-bundle.zip
-    snapshot: true
+    url: https://github.com/vshn/antora-ui/releases/download/v3.2.0/ui-bundle.zip
+    snapshot: false
 output:
   dir: .public/
   clean: true
