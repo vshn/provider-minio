@@ -87,6 +87,12 @@ jobs:
         with:
           repository: ${{ env.COMPONENT_REPO }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          # make gen-golden-all runs hack/getversionlist.py, which calls git
+          # describe and fails with "No names found" in a shallow clone.
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags
 
       - name: Extract branch name
         shell: bash
