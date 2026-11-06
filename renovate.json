@@ -40,6 +40,41 @@
       "schedule": [
         "on the first day of the month"
       ]
+    },
+    {
+      "description": "Patch releases of the UI bundle merge once the docs build passes.",
+      "matchDepNames": [
+        "vshn/antora-ui"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Minor and major UI bundle releases change how every page looks, and a green build says nothing about appearance, so a person reviews them.",
+      "matchDepNames": [
+        "vshn/antora-ui"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "automerge": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track the Antora UI bundle pinned in the playbook. No built-in manager reads a URL inside a YAML value, so without this the pin never moves (vshn/antora-ui#204).",
+      "fileMatch": [
+        "^docs/antora-playbook\\.yml$"
+      ],
+      "matchStrings": [
+        "https://github\\.com/(?<depName>[^/]+/[^/]+)/releases/download/(?<currentValue>[^/]+)/ui-bundle(-[a-z]+)?\\.zip"
+      ],
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver"
     }
   ]
 }
