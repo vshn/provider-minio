@@ -23,8 +23,15 @@ LOCAL_PACKAGE_IMG = localhost:5000/$(PROJECT_OWNER)/$(PROJECT_NAME)/package:$(IM
 ## KIND:setup
 
 # https://hub.docker.com/r/kindest/node/tags
+# renovate: datasource=docker depName=docker.io/kindest/node
 KIND_NODE_VERSION ?= v1.28.9
 KIND_IMAGE ?= docker.io/kindest/node:$(KIND_NODE_VERSION)
 KIND ?= go run sigs.k8s.io/kind
 KIND_KUBECONFIG ?= $(kind_dir)/kind-kubeconfig
 KIND_CLUSTER ?= $(PROJECT_NAME)
+
+# Helm charts for the local and E2E setup
+# renovate: datasource=helm depName=crossplane registryUrl=https://charts.crossplane.io/stable
+CROSSPLANE_VERSION ?= 1.20.1
+# renovate: datasource=helm depName=minio registryUrl=https://charts.min.io/
+MINIO_CHART_VERSION ?= 5.0.7
