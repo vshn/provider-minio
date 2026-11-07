@@ -13,3 +13,18 @@ ingress:
   path: /
   hosts:
     - minio.127.0.0.1.nip.io
+
+# MinIO stopped publishing community images: none of quay.io/minio/minio,
+# quay.io/minio/mc, minio/minio or minio/mc resolves any more, including the
+# tags chart 5.0.7 pins and :latest. Chainguard's image ships minio, mc and a
+# shell, so it serves as both the server and the chart's mc image.
+image:
+  repository: cgr.dev/chainguard/minio
+  tag: latest
+mcImage:
+  repository: cgr.dev/chainguard/minio
+  tag: latest
+# The chart's default "console" user is created by a post-install job that
+# writes mc config to /etc/minio, which the non-root Chainguard image cannot.
+# The tests log in as the root user, so the job is not needed.
+users: []

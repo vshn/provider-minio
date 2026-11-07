@@ -41,7 +41,7 @@ registry-setup: $(registry_sentinel) ## Installs an image registry required for 
 
 $(registry_sentinel): export KUBECONFIG = $(KIND_KUBECONFIG)
 $(registry_sentinel): $(KIND_KUBECONFIG)
-	helm repo add twuni https://helm.twun.io
+	helm repo add --force-update twuni https://twuni.github.io/docker-registry.helm
 	helm upgrade --install registry twuni/docker-registry \
 		--create-namespace \
 		--namespace registry-system \
