@@ -54,7 +54,7 @@ lint: generate fmt golangci-lint git-diff ## All-in-one linting
 
 .PHONY: golangci-lint
 golangci-lint: $(golangci_bin) ## Run golangci linters
-	$(golangci_bin) run --timeout 5m --out-format colored-line-number ./...
+	$(golangci_bin) run --timeout 5m ./...
 
 .PHONY: git-diff
 git-diff:
@@ -71,7 +71,7 @@ clean: kind-clean ## Cleans local build artifacts
 	rm -rf docs/node_modules $(docs_out_dir) dist .cache $(WORK_DIR)
 
 $(golangci_bin): | $(go_bin)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go_bin)"
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$(go_bin)"
 
 .PHONY: install-crd
 install-crd: export KUBECONFIG = $(KIND_KUBECONFIG)

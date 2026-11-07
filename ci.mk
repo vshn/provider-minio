@@ -1,3 +1,6 @@
+# renovate: datasource=go depName=github.com/crossplane/crossplane
+CRANK_VERSION ?= v1.16.0
+
 # Image URL to use all building/pushing image targets
 IMG_TAG ?= latest
 APP_NAME ?= provider-minio
@@ -35,11 +38,11 @@ docker-push-branchtag: docker-build-branchtag docker-push ## Push docker image w
 .PHONY: package-build
 package-build: docker-build
 	rm -f package/*.xpkg
-	go run github.com/crossplane/crossplane/cmd/crank@v1.16.0 xpkg build -f package --verbose --embed-runtime-image=${IMG} -o package/package.xpkg
+	go run github.com/crossplane/crossplane/cmd/crank@$(CRANK_VERSION) xpkg build -f package --verbose --embed-runtime-image=${IMG} -o package/package.xpkg
 
 .PHONY: package-push
 package-push: package-build
-	go run github.com/crossplane/crossplane/cmd/crank@v1.16.0 xpkg push -f package/package.xpkg ${IMG} --verbose
+	go run github.com/crossplane/crossplane/cmd/crank@$(CRANK_VERSION) xpkg push -f package/package.xpkg ${IMG} --verbose
 
 .PHONY: package-build-branchtag
 package-build-branchtag: export IMG_TAG=$(shell git rev-parse --abbrev-ref HEAD | sed 's/\//_/g')

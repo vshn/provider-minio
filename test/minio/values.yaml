@@ -13,3 +13,18 @@ ingress:
   path: /
   hosts:
     - minio.127.0.0.1.nip.io
+
+# MinIO stopped publishing community images: none of quay.io/minio/minio,
+# quay.io/minio/mc, minio/minio or minio/mc resolves any more, including the
+# tags chart 5.0.7 pins and :latest. VSHN's rebuild ships minio, mc and a
+# shell, so it serves as both the server and the chart's mc image, as in
+# k8up-io/k8up e2e/definitions/minio/helm.yaml.
+image:
+  repository: ghcr.io/vshn/minio
+  tag: RELEASE.2025-09-07T16-13-09Z
+mcImage:
+  repository: ghcr.io/vshn/minio
+  tag: RELEASE.2025-09-07T16-13-09Z
+# The chart's default "console" user is created by a post-install job
+# that never completes on kind. The tests log in as the root user.
+users: []

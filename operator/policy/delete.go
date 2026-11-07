@@ -7,7 +7,6 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	metav1 "github.com/vshn/provider-minio/apis/minio/v1"
 	miniov1 "github.com/vshn/provider-minio/apis/minio/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -16,7 +15,7 @@ func (p *policyClient) Delete(ctx context.Context, mg resource.Managed) (managed
 	log := ctrl.LoggerFrom(ctx)
 	log.V(1).Info("deleting resource")
 
-	policy, ok := mg.(*metav1.Policy)
+	policy, ok := mg.(*miniov1.Policy)
 	if !ok {
 		return managed.ExternalDelete{}, errNotPolicy
 	}
