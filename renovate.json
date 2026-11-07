@@ -52,6 +52,17 @@
       "allowedVersions": "<2"
     },
     {
+      "description": "Antora image tags have four parts (3.1.14.1). The default semver-coerced versioning drops the fourth, so revision-only releases would never produce a PR.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/vshn/antora",
+        "ghcr.io/vshn/antora-preview"
+      ],
+      "versioning": "loose"
+    },
+    {
       "description": "Stay on Crossplane 1.x until the E2E setup moves to v2: v2 removed --enable-composition-revisions, and the provider never becomes Healthy on it.",
       "matchDatasources": [
         "helm"
