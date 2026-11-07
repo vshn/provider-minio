@@ -25,3 +25,6 @@ image:
 mcImage:
   repository: ghcr.io/vshn/minio
   tag: RELEASE.2025-09-07T16-13-09Z
+# The chart's default "console" user is created by a post-install job
+# that never completes on kind. The tests log in as the root user.
+users: []
